@@ -1,0 +1,13 @@
+&newparameters
+dataname	='checkseries4_2.txt'
+
+Aphilist	='0.285714'
+ABlist		='5.'
+AmuSClist	='20.'
+Amulist		='5.'
+
+Anstepphi	=  1
+AnstepB		=  1
+AnstepmuSC	=  1
+Anstepmu	=  1
+/
