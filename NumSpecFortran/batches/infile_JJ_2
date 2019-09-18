@@ -1,0 +1,15 @@
+&newparameters
+dataname	='loopmass.txt'
+
+Aphilist	='0.36'
+ABlist		='5.'
+AmuSClist	='20.'
+Amulist		='20.'
+ASCmlist	='10.'
+
+Anstepphi	=  1
+AnstepB		=  1
+AnstepmuSC	=  1
+Anstepmu	=  1
+AnstepSCm	=  1
+/
