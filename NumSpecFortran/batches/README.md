@@ -1,0 +1,1 @@
+Folder to run the spectra. Try not to push the data on the remote server of GitHub but to keep them locally while the generating files are tracked. Technically they should be a copy of gapFocus' files.
