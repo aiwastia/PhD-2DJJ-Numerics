@@ -1,1 +1,2 @@
-test
+Folder for the Python files computing the first stage of numerics: phase diagrams, spectra, differential equation solvers...
+Generated data are stored locally to avoid overloading GitHub.
