@@ -1,0 +1,15 @@
+&newparameters
+dataname	='series2.txt'
+
+Aphilist	='0.:50:1.'
+ABlist		='0.:10.:600.'
+AmuSClist	='550.,1500.'
+Amulist		='500.'
+ASCmlist	='1.,4.,10.'
+
+Anstepphi	=  1
+AnstepB		=  1
+AnstepmuSC	=  1
+Anstepmu	=  1
+AnstepSCm	=  1
+/
