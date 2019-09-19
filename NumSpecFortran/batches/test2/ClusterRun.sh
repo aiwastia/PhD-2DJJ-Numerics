@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH -D /home/aiwastia/Desktop/git/PhD-2DJJ-Numerics/NumSpecFortran/batches
+#SBATCH -D /home/aiwastia/Desktop/git/PhD-2DJJ-Numerics/NumSpecFortran/batches/test2
 #SBATCH --partition=long
 #SBATCH --job-name=1massSOC
 #SBATCH --ntasks=1
