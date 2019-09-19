@@ -1,0 +1,26 @@
+&parameters
+outfname	='test.dat',
+alpha		=3d0,
+Deltamag	=1d0
+Deltamag1	=0d0
+
+Lmax		=10000.0000001d0,
+Lmax1		=1.0000001d0,
+
+dkfrac		=10.,
+secant		=50,
+
+epsmin		=0d0,
+epsmax		=1.
+
+dL		=.001d0,
+potshift	= 5d3,
+pot		=200d-10,
+Lj		=.010d-10
+mass		=1d0,
+ Deltaphase2	=   8.1632653061224483E-002
+ bmag		=   80.000000000000000     
+ mu0		=   500.00000000000000     
+ mu01		=   125.00000000000000     
+ SCmass		=   4.0000000000000000     
+ /
