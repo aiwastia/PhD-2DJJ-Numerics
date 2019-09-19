@@ -2,14 +2,14 @@
 dataname	='series1biscopy.txt'
 
 Aphilist	='0.:50:1.'
-ABlist		='0.:2.:140.'
+ABlist		='0.:0.5:40.'
 AmuSClist	='130.,500.'
 Amulist		='125.'
-ASCmlist	='1.,4.,10.'
+ASCmlist	='1.'
 
-Anstepphi	=  4
-AnstepB		=  71
+Anstepphi	=  3
+AnstepB		=  81
 AnstepmuSC	=  2
 Anstepmu	=  1
-AnstepSCm	=  3
+AnstepSCm	=  1
 /
