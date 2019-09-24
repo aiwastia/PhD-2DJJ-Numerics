@@ -648,7 +648,7 @@ nlprev=1
 prevcurv=0.
 
 !defines the level of curvature to be resolved
-curvmin=-10.!-1d10  !don't care about resolving local maxima
+curvmin=-10d13.!-1d10  !don't care about resolving local maxima
 curvmax=10.
 slopemin=2.*(epsmax-epsmin)/(kxmax-kxmin)
 
@@ -709,17 +709,15 @@ do while (kx.le.(kxmax))
 	endif
 
 	slope1=(Eplateau(2)-Eplateau(1))/BBigdkx
-	print*, 's',slope1
+	!print*, 's',slope1
 	prevbdkx=BBigdkx
 
-	if ((abs(slope1).lt.slopemin))then!.and.(abs(slope1).gt.10**(-10))) then
+	if ((abs(slope1).lt.slopemin))then
 		BBigdkx=Bigdkx*min(slopemin/abs(slope1),5.)
-	!else if (abs(slope1).le.10**(-10)) then
-	!	BBigdkx=5.*Bigdkx
 	else
 		BBigdkx=Bigdkx
 	endif
-print*,BBigdkx
+	!print*,BBigdkx
 
 	!! LOOP over 3
 	kx=kx+BBigdkx
@@ -736,24 +734,37 @@ print*,BBigdkx
 	!compute local curvature (discrete second derivative)
 	!print*,Eplateau
 	curvature=(slope2-slope1)/(BBigdkx+prevbdkx)*2d0
-	print*, 'c',curvature
+	!print*, 'c',curvature
+
 
 	!when needed, see if lowest level is higher than ground state (missed point)
 	if((prevcurv.le.curvmax).and.(prevcurv.ge.curvmin).and.((curvature.gt.curvmax).or.(curvature.lt.curvmin)).and.(nlprev.ge.2)) then
-		do jj=2,nlprev
-			testhole=testhole.or.(abs(Eplateau(3)-prevlevel(jj)).le.10**(-12))
+		!discretize a bit more
+		kx2=fullBZ(fff)
+		tempdkx=(kx3-kx2)/10.
+		stspec=0
+		checkgap=.false.
+		do i=1,10
+			kx=kx2+i*tempdkx
+			call computeEkx(Ndata,epsmin,epsmax,dL0,dL1,&
+				gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
+				bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
+				Opnbr,Opnbr1,pot,Lj,phi,varphase,kx,kroot,newlevelLIST,nl,gap,detR)
+			spec(stspec+1:stspec+nl)=newlevelLIST(1:nl)
+			stspec=stspec+nl
 		enddo
-	endif
-	if(testhole) then !insert the missed point by extrapolation
-		do i=1,nl
-			newlevelLIST(nl+2-i)=newlevelLIST(nl+1-i)
-		enddo
-		newlevelLIST(1)=minval(prevlevel(1:nlprev))+slope1*BBigdkx
-		nl=nl+1
-		Eplateau(3)=newlevelLIST(1)
-		slope2=(Eplateau(3)-Eplateau(2))/BBigdkx
-		curvature=(slope2-slope1)/(BBigdkx+prevbdkx)*2d0
-		testhole=.false.
+		!sort all the values
+		call qsort(spec,stspec,8,ordering) !built-in sorting subroutine
+		!define the existence of a gap and if the previous Energy3 was above it
+		forall(i=1,stspec) diffgap(i)=spec(i+1)-spec(i)
+		igap=maxloc(diffgap)
+		intergap=diffgap(igap)
+		if ((intergap.gt.(3*maxval(diffgap(1:igap-1)))).and.(intergap.gt.(3*maxval(diffgap(igap+1:stspec))))) checkgap=.true.
+		if ((checkgap).and.(Eplateau(3).gt.spec(igap-1))) then
+			Eplateau(3)=Infinity
+			slope2=Infinity
+			curvature=Infinity
+		endif
 	endif
 
 	!keep or start over the 2 previous segments E1-E2 & E2-E3
@@ -816,7 +827,6 @@ print*,BBigdkx
 					newlevelLIST(1)=minval(prevlevel(1:nlprev))+prevslope*dkx
 					nl=nl+1
 					Ept=newlevelLIST(1)
-					!Eplateau(3)=newlevelLIST(1)
 					testhole=.false.
 				endif
 
@@ -861,6 +871,22 @@ enddo
 
 
 gap=minval(fulllevels)
+
+
+
+function ordering(a,b) result(order)
+real*8,intent(in) :: a,b
+integer*2 :: order
+
+if (a.gt.b) then
+	order=1
+else if (a.eq.b) then
+	order=0
+else
+	order=-1
+endif
+end function ordering
+
 
 end subroutine dyn_scan_min
 
