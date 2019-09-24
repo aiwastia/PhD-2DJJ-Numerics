@@ -635,10 +635,11 @@ integer :: ff,fff,dd,ddd,nl,nlprev,kroot,i,jj,selbot
 complex*16 :: detR
 real*8,dimension(3) :: Eplateau
 real*8,dimension(5) :: newlevelLIST,prevlevel
-real*8 :: dkx,kx,kx3,curvmin,curvmax,curvature,Ept,prevcurv,slope1,slope2,prevslope
+real*8 :: dkx,kx,kx3,curvmin,curvmax,curvature,Ept,prevcurv,slope1,slope2,prevslope,BBigdkx,slopemin,prevbdkx
 logical :: startwhite,endwhite,testhole,checkdown
 
 
+BBigdkx=Bigdkx
 fullBZ=kxmax
 fulllevels=epsmax
 kroot=0
@@ -649,6 +650,7 @@ prevcurv=0.
 !defines the level of curvature to be resolved
 curvmin=-10.!-1d10  !don't care about resolving local maxima
 curvmax=10.
+slopemin=2.*(epsmax-epsmin)/(kxmax-kxmin)
 
 startwhite=.false.
 endwhite=.true.
@@ -706,12 +708,22 @@ do while (kx.le.(kxmax))
 		endwhite=.false.
 	endif
 
-	slope1=(Eplateau(2)-Eplateau(1))/Bigdkx
-	!print*, 's',slope1
+	slope1=(Eplateau(2)-Eplateau(1))/BBigdkx
+	print*, 's',slope1
+	prevbdkx=BBigdkx
+
+	if ((abs(slope1).lt.slopemin))then!.and.(abs(slope1).gt.10**(-10))) then
+		BBigdkx=Bigdkx*min(slopemin/abs(slope1),5.)
+	!else if (abs(slope1).le.10**(-10)) then
+	!	BBigdkx=5.*Bigdkx
+	else
+		BBigdkx=Bigdkx
+	endif
+print*,BBigdkx
 
 	!! LOOP over 3
-	kx=kx+Bigdkx
-	!print*,'k',kx
+	kx=kx+BBigdkx
+	print*,'k',kx
 	kx3=kx
 	call computeEkx(Ndata,epsmin,epsmax,dL0,dL1,&
 		gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
@@ -719,12 +731,12 @@ do while (kx.le.(kxmax))
 		Opnbr,Opnbr1,pot,Lj,phi,varphase,kx,kroot,newlevelLIST,nl,gap,detR)
 	Eplateau(3)=minval(newlevelLIST(1:nl))
 
-	slope2=(Eplateau(3)-Eplateau(2))/Bigdkx
+	slope2=(Eplateau(3)-Eplateau(2))/BBigdkx
 
 	!compute local curvature (discrete second derivative)
 	!print*,Eplateau
-	curvature=(slope2-slope1)/Bigdkx
-	!print*, 'c',curvature
+	curvature=(slope2-slope1)/(BBigdkx+prevbdkx)*2d0
+	print*, 'c',curvature
 
 	!when needed, see if lowest level is higher than ground state (missed point)
 	if((prevcurv.le.curvmax).and.(prevcurv.ge.curvmin).and.((curvature.gt.curvmax).or.(curvature.lt.curvmin)).and.(nlprev.ge.2)) then
@@ -736,11 +748,11 @@ do while (kx.le.(kxmax))
 		do i=1,nl
 			newlevelLIST(nl+2-i)=newlevelLIST(nl+1-i)
 		enddo
-		newlevelLIST(1)=minval(prevlevel(1:nlprev))+slope1*Bigdkx
+		newlevelLIST(1)=minval(prevlevel(1:nlprev))+slope1*BBigdkx
 		nl=nl+1
 		Eplateau(3)=newlevelLIST(1)
-		slope2=(Eplateau(3)-Eplateau(2))/Bigdkx
-		curvature=(slope2-slope1)/Bigdkx
+		slope2=(Eplateau(3)-Eplateau(2))/BBigdkx
+		curvature=(slope2-slope1)/(BBigdkx+prevbdkx)*2d0
 		testhole=.false.
 	endif
 
@@ -780,7 +792,7 @@ do while (kx.le.(kxmax))
 			prevslope=slope1
 			!!!!! re-descretize the 2 previous segments
 			kx=fullBZ(fff-1)
-			dkx=min(Bigdkx,Bigdkx/(100.*log(1+abs(curvature)/100.))) !to tune when one changes Bigdkx
+			dkx=min(Bigdkx,BBigdkx/(100.*log(1+abs(curvature)/100.))) !curvature/curvmin !to tune when one changes BBigdkx
 			!print*,dkx
 			do while (kx.le.kx3)
 				kx=kx+dkx

@@ -134,7 +134,7 @@ phi = Deltaphase2
  kxmax=1.1*kFmax
  kxmin=0. !1.0*kFmax-2*kFmax/(kFmax*Lmax1)**2
  Bigdkx=min((kxmax-kxmin)/dble(nkxmax),kFmax/(kFmax*Lmax1)**2)
-!print*,'Bigdkx=',Bigdkx
+print*,'Bigdkx=',Bigdkx
  dkx=min(kFmax/(kFmax*Lmax1)**2, Bigdkx/2.)
 
 !!!!!!!!!!! SPACE DISCRETIZATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
