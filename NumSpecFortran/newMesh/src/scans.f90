@@ -631,24 +631,28 @@ real*8,intent(inout) :: gap
 real*8,intent(out) :: fulllevels(10000,5)
 real*8,intent(out) :: fullBZ(10000)
 
-integer :: ff,fff,dd,ddd,nl,nlprev,kroot,i,jj,selbot
+integer :: ff,fff,dd,ddd,nl,nlprev,kroot,i,jj,selbot,stspec,igap
 complex*16 :: detR
 real*8,dimension(3) :: Eplateau
 real*8,dimension(5) :: newlevelLIST,prevlevel
-real*8 :: dkx,kx,kx3,curvmin,curvmax,curvature,Ept,prevcurv,slope1,slope2,prevslope,BBigdkx,slopemin,prevbdkx
-logical :: startwhite,endwhite,testhole,checkdown
+real*8,dimension(50) :: spec,diffgap
+real*8 :: dkx,kx,kx3,kx2,tempdkx,intergap
+real*8 :: curvmin,curvmax,curvature,Ept,prevcurv,slope1,slope2,prevslope,BBigdkx,slopemin,prevbdkx
+logical :: startwhite,endwhite,testhole,checkdown,checkgap
 
 
-BBigdkx=Bigdkx
+BBigdkx=100*Bigdkx
 fullBZ=kxmax
 fulllevels=epsmax
+spec=epsmax
+diffgap=epsmax
 kroot=0
 prevlevel=epsmax
 nlprev=1
 prevcurv=0.
 
 !defines the level of curvature to be resolved
-curvmin=-10d13.!-1d10  !don't care about resolving local maxima
+curvmin=-10d13 !-1d10  !don't care about resolving local maxima
 curvmax=10.
 slopemin=2.*(epsmax-epsmin)/(kxmax-kxmin)
 
@@ -662,7 +666,7 @@ ff=0
 
 do while (kx.le.(kxmax))
 
-	if(endwhite) then !initialize Eplateau after an empty part of spectrum
+	do while(endwhite) !initialize Eplateau after an empty part of spectrum
 		!! INITIAL 1
 		fff=fff+1
 		fullBZ(fff)=kx
@@ -670,21 +674,23 @@ do while (kx.le.(kxmax))
 				gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
 				bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
 				Opnbr,Opnbr1,pot,Lj,phi,varphase,kx,kroot,newlevelLIST,nl,gap,detR)
-		if (kroot.gt.0) then
+		if (kroot.gt.0) then !implies nl>1
 			write(9,'(F20.13,1x,$)') kx
 			do jj=1,nl
 				write(9,'(F20.13,1x,$)') newlevelLIST(jj)
 			enddo
 			write(9,*)
+			Eplateau=minval(newlevelLIST(1:nl))
+			ff=ff+1
+			do ddd=1,5
+				fulllevels(ff,ddd)=newlevelLIST(ddd)
+			enddo
+			startwhite=.false.
+			endwhite=.false.
 		endif
-		Eplateau(1)=minval(newlevelLIST(1:nl))
-		ff=ff+1
-		do ddd=1,5
-			fulllevels(ff,ddd)=newlevelLIST(ddd)
-		enddo
 
 		!! INITIAL 2
-		kx=kx+Bigdkx
+		kx=kx+BBigdkx
 		fff=fff+1
 		fullBZ(fff)=kx
 		call computeEkx(Ndata,epsmin,epsmax,dL0,dL1,&
@@ -697,25 +703,28 @@ do while (kx.le.(kxmax))
 				write(9,'(F20.13,1x,$)') newlevelLIST(jj)
 			enddo
 			write(9,*)
+			if(endwhite) then
+				 Eplateau=minval(newlevelLIST(1:nl))
+			else
+				Eplateau(2)=minval(newlevelLIST(1:nl))
+			endif
+			ff=ff+1
+			do ddd=1,5
+				fulllevels(ff,ddd)=newlevelLIST(ddd)
+			enddo
+			startwhite=.false.
+			endwhite=.false.
 		endif
-		Eplateau(2)=minval(newlevelLIST(1:nl))
-		ff=ff+1
-		do ddd=1,5
-			fulllevels(ff,ddd)=newlevelLIST(ddd)
-		enddo
-
-		startwhite=.false.
-		endwhite=.false.
-	endif
+	enddo
 
 	slope1=(Eplateau(2)-Eplateau(1))/BBigdkx
 	!print*, 's',slope1
 	prevbdkx=BBigdkx
 
 	if ((abs(slope1).lt.slopemin))then
-		BBigdkx=Bigdkx*min(slopemin/abs(slope1),5.)
+		BBigdkx=Bigdkx*min(slopemin/abs(slope1),50.)
 	else
-		BBigdkx=Bigdkx
+		BBigdkx=100*Bigdkx
 	endif
 	!print*,BBigdkx
 
@@ -727,19 +736,19 @@ do while (kx.le.(kxmax))
 		gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
 		bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
 		Opnbr,Opnbr1,pot,Lj,phi,varphase,kx,kroot,newlevelLIST,nl,gap,detR)
-	Eplateau(3)=minval(newlevelLIST(1:nl))
+	if(nl.ge.1) Eplateau(3)=minval(newlevelLIST(1:nl))
 
 	slope2=(Eplateau(3)-Eplateau(2))/BBigdkx
 
 	!compute local curvature (discrete second derivative)
 	!print*,Eplateau
 	curvature=(slope2-slope1)/(BBigdkx+prevbdkx)*2d0
-	!print*, 'c',curvature
-
+	print*, 'c',curvature
 
 	!when needed, see if lowest level is higher than ground state (missed point)
 	if((prevcurv.le.curvmax).and.(prevcurv.ge.curvmin).and.((curvature.gt.curvmax).or.(curvature.lt.curvmin)).and.(nlprev.ge.2)) then
 		!discretize a bit more
+print*,"passe"
 		kx2=fullBZ(fff)
 		tempdkx=(kx3-kx2)/10.
 		stspec=0
@@ -750,23 +759,35 @@ do while (kx.le.(kxmax))
 				gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
 				bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
 				Opnbr,Opnbr1,pot,Lj,phi,varphase,kx,kroot,newlevelLIST,nl,gap,detR)
-			spec(stspec+1:stspec+nl)=newlevelLIST(1:nl)
+			if(nl.ge.1) spec(stspec+1:stspec+nl)=newlevelLIST(1:nl)
 			stspec=stspec+nl
 		enddo
+		kx=kx3
 		!sort all the values
-		call qsort(spec,stspec,8,ordering) !built-in sorting subroutine
+		call quicksort(spec,1,stspec)
 		!define the existence of a gap and if the previous Energy3 was above it
-		forall(i=1,stspec) diffgap(i)=spec(i+1)-spec(i)
-		igap=maxloc(diffgap)
+		forall(i=1:stspec-1) diffgap(i)=spec(i+1)-spec(i)
+		igap=maxloc(diffgap(1:stspec-1),1)
 		intergap=diffgap(igap)
-		if ((intergap.gt.(3*maxval(diffgap(1:igap-1)))).and.(intergap.gt.(3*maxval(diffgap(igap+1:stspec))))) checkgap=.true.
+		if ((intergap.gt.(3*maxval(diffgap(1:igap-1)))).and.(intergap.gt.(3*maxval(diffgap(igap+1:stspec-1))))) checkgap=.true.
+		if ((checkgap).and.(Eplateau(1).gt.spec(igap-1))) then
+			Eplateau(1)=Infinity
+			slope1=Infinity
+			curvature=Infinity
+		endif
+		if ((checkgap).and.(Eplateau(2).gt.spec(igap-1))) then
+			Eplateau(2)=Infinity
+			slope1=Infinity
+			slope2=Infinity
+			curvature=Infinity
+		endif
 		if ((checkgap).and.(Eplateau(3).gt.spec(igap-1))) then
 			Eplateau(3)=Infinity
 			slope2=Infinity
 			curvature=Infinity
 		endif
 	endif
-
+print*,curvature
 	!keep or start over the 2 previous segments E1-E2 & E2-E3
 
 	if((slope1*slope2.gt.0).or.(slope1.ge.0.)) then
@@ -803,7 +824,7 @@ do while (kx.le.(kxmax))
 			prevslope=slope1
 			!!!!! re-descretize the 2 previous segments
 			kx=fullBZ(fff-1)
-			dkx=min(Bigdkx,BBigdkx/(100.*log(1+abs(curvature)/100.))) !curvature/curvmin !to tune when one changes BBigdkx
+			dkx=min(BBigdkx,BBigdkx/(100.*log(1+abs(curvature/curvmax)/100.)))
 			!print*,dkx
 			do while (kx.le.kx3)
 				kx=kx+dkx
@@ -813,7 +834,7 @@ do while (kx.le.(kxmax))
 					gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
 					bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
 					Opnbr,Opnbr1,pot,Lj,phi,varphase,kx,kroot,newlevelLIST,nl,gap,detR)
-				Ept=minval(newlevelLIST(1:nl))
+				if(nl.ge.1) Ept=minval(newlevelLIST(1:nl))
 				!again check the holes in the subdivision of the spectrum
 				if(nlprev.ge.2) then
 					do jj=2,nlprev
@@ -824,7 +845,7 @@ do while (kx.le.(kxmax))
 					do i=1,nl
 						newlevelLIST(nl+2-i)=newlevelLIST(nl+1-i)
 					enddo
-					newlevelLIST(1)=minval(prevlevel(1:nlprev))+prevslope*dkx
+					newlevelLIST(1)=minval(prevlevel(1:nlprev))+prevslope*dkx !!to change
 					nl=nl+1
 					Ept=newlevelLIST(1)
 					testhole=.false.
@@ -871,22 +892,6 @@ enddo
 
 
 gap=minval(fulllevels)
-
-
-
-function ordering(a,b) result(order)
-real*8,intent(in) :: a,b
-integer*2 :: order
-
-if (a.gt.b) then
-	order=1
-else if (a.eq.b) then
-	order=0
-else
-	order=-1
-endif
-end function ordering
-
 
 end subroutine dyn_scan_min
 
