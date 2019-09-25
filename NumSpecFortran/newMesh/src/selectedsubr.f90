@@ -2,7 +2,7 @@ module selectedsubr
 
 implicit none
 real*8,parameter	:: pi=3.141592653589793d0
-double precision,parameter	:: Infinity=huge(1.)
+real*8,parameter	:: Infinity=huge(1.)
 
 contains
 

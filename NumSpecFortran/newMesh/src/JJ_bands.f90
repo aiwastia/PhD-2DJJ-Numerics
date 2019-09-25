@@ -208,14 +208,14 @@ call dyn_scan_min(Ndata,epsmin,epsmax,dL0,dL1,&
             gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
             bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
             Opnbr,Opnbr1,pot,Lj,phi,varphase,gap,&
-            Bigdkx,fulllevels,fullBZ,kxmax,kxmin,nkxmax)
+            Bigdkx,fulllevels,fullBZ,kxmax,1.4d0,nkxmax)
 deallocate(fullBZ)
 deallocate(fulllevels)
 
 
 !!!!!!!!!!!!!!!! VERTICAL SCANNING fix grid !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !write(9,'(A)') '# energy, kx'
-!allocate(newlevelLIST(20))
+!allocate(newlevelLIST(50))
 !call vertical_scanning(nkxmax,kxmin,kxmax,dL0,dL1,&
 !			gammatot,mu0,mu01,Deltamag,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
 !			bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
