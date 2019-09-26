@@ -1,0 +1,2 @@
+plot 'test1_1_1_1.dat' using 2:1, '' using 3:1, '' using 4:1, '' using 5:1, '' using 6:1, '' using 7:1, '' using 8:1, '' using 9:1, '' using 10:1
+pause -1 "Press any key to close and go on :"
