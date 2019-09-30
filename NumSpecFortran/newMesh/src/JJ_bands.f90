@@ -133,7 +133,7 @@ phi = Deltaphase2
  kFmax=mass*alpha+sqrt(2d0*mass*(mu01+bmag1)+mass**2*alpha**2) !keep junction's mass
  kxmax=1.1*kFmax
  kxmin=0. !1.0*kFmax-2*kFmax/(kFmax*Lmax1)**2
- Bigdkx=2*Lmax1*min((kxmax-kxmin)/dble(nkxmax),kFmax/(kFmax*Lmax1)**2)
+ Bigdkx=0.1!2*Lmax1*min((kxmax-kxmin)/dble(nkxmax),kFmax/(kFmax*Lmax1)**2)
 print*,'Bigdkx=',Bigdkx
  dkx=min(kFmax/(kFmax*Lmax1)**2, Bigdkx/2.)
 
