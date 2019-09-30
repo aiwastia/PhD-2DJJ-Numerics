@@ -35,7 +35,7 @@ call get_infile_newparameters
 
 open(unit=30,file=dataname,form='formatted',status='new')
 
-vartitle=(/ '#phi','B   ','muSC','mu  ','SCm ','gap ' /)
+vartitle=(/ '#mu ','SCm ','muSC','B   ','phi ','gap ' /)
 write(30,"(6(a,a,a))") (vartitle(i),achar(9),achar(9),i=1,6)
 
 call makelist(trim(Aphilist),Aphiarray,'phi')
@@ -52,16 +52,17 @@ AnstepSCm=size(ASCmarray)
 
 !! LOOPS TO COMPUTE THE GAP USING THE SCATTERING CODE
 
-do g=1,Anstepphi
-	Aloopparam(1)=Aphiarray(g)
-do gg=1,AnstepB
-	Aloopparam(2)=ABarray(gg)
+!if change order here, change in Aloopparam , write(22) and vartitle
+do gggg=1,Anstepmu
+	Aloopparam(1)=Amuarray(gggg)
+do ggggg=1,AnstepSCm
+	Aloopparam(2)=ASCmarray(ggggg)
 do ggg=1,AnstepmuSC
 	Aloopparam(3)=AmuSCarray(ggg)
-do gggg=1,Anstepmu
-	Aloopparam(4)=Amuarray(gggg)
-do ggggg=1,AnstepSCm
-	Aloopparam(5)=ASCmarray(ggggg)
+do gg=1,AnstepB
+	Aloopparam(4)=ABarray(gg)
+do g=1,Anstepphi
+	Aloopparam(5)=Aphiarray(g)
 	
 	!! MODIFYING THE INPUT FILE
 	Apointer=0
@@ -70,11 +71,11 @@ do ggggg=1,AnstepSCm
 		read(22,'(a4)') Alecture
 		if (Alecture.eq.'mass') then
 			Apointer=1
-			write(22,*) 'Deltaphase2',achar(9),'=',Aloopparam(1)
-			write(22,*) 'bmag',achar(9),achar(9),'=',Aloopparam(2)
+			write(22,*) 'Deltaphase2',achar(9),'=',Aloopparam(5)
+			write(22,*) 'bmag',achar(9),achar(9),'=',Aloopparam(4)
 			write(22,*) 'mu0',achar(9),achar(9),'=',Aloopparam(3)
-			write(22,*) 'mu01',achar(9),achar(9),'=',Aloopparam(4)
-			write(22,*) 'SCmass',achar(9),achar(9),'=',Aloopparam(5)
+			write(22,*) 'mu01',achar(9),achar(9),'=',Aloopparam(1)
+			write(22,*) 'SCmass',achar(9),achar(9),'=',Aloopparam(2)
 			write(22,*) '/'
 		end if
 	end do
