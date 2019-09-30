@@ -2,6 +2,7 @@ module selectedsubr
 
 implicit none
 real*8,parameter	:: pi=3.141592653589793d0
+real*8,parameter	:: Infinity=huge(1.)
 
 contains
 
@@ -646,6 +647,47 @@ Ssc=dcmplx(0d0,0d0)
   Ssc(8,8) = exp( dcmplx(0.0_8,  -1.0_8 * pi * phi) )  
 
 end subroutine
+
+
+
+recursive subroutine quicksort(A,lo,hi)
+implicit none
+integer,intent(in) :: lo,hi !min (1) and max (len) indices of the array to sort
+real*8,dimension(hi),intent(inout) :: A !array to sort
+integer :: p
+
+if (lo.lt.hi) then
+	call partition(A, lo, hi, p)
+	call quicksort(A, lo, p - 1)
+	call quicksort(A, p + 1, hi)
+endif
+end subroutine quicksort
+
+
+subroutine partition(A, lo, hi,i)
+implicit none
+integer,intent(in) :: lo,hi !min (1) and max (len) indices of the array to sort
+real*8,dimension(hi),intent(inout) :: A !array to sort
+real*8 :: pivot,interm
+integer,intent(out) :: i
+integer :: j
+
+pivot = A(hi)
+i = lo
+do j=lo,hi
+	if (A(j).lt.pivot) then
+		interm=A(j)
+		A(j)=A(i)
+		A(i)=interm
+		i=i+1
+	endif
+enddo
+interm=A(hi)
+A(hi)=A(i)
+A(i)=interm
+end subroutine partition
+
+
 
 
 

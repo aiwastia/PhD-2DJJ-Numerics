@@ -1,0 +1,13 @@
+&newparameters
+dataname	='testperf2.txt'
+
+Aphilist	='0.306122'
+ABlist		='7.'
+AmuSClist	='300.'
+Amulist		='150.'
+
+Anstepphi	=  1
+AnstepB		=  1
+AnstepmuSC	=  1
+Anstepmu	=  1
+/
