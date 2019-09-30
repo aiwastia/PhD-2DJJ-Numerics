@@ -133,7 +133,7 @@ phi = Deltaphase2
  kFmax=mass*alpha+sqrt(2d0*mass*(mu01+bmag1)+mass**2*alpha**2) !keep junction's mass
  kxmax=1.1*kFmax
  kxmin=0. !1.0*kFmax-2*kFmax/(kFmax*Lmax1)**2
- Bigdkx=min((kxmax-kxmin)/dble(nkxmax),kFmax/(kFmax*Lmax1)**2)
+ Bigdkx=2*Lmax1*min((kxmax-kxmin)/dble(nkxmax),kFmax/(kFmax*Lmax1)**2)
 print*,'Bigdkx=',Bigdkx
  dkx=min(kFmax/(kFmax*Lmax1)**2, Bigdkx/2.)
 
@@ -208,7 +208,7 @@ call dyn_scan_min(Ndata,epsmin,epsmax,dL0,dL1,&
             gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
             bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
             Opnbr,Opnbr1,pot,Lj,phi,varphase,gap,&
-            Bigdkx,fulllevels,fullBZ,kxmax,1.4d0,nkxmax)
+            Bigdkx,fulllevels,fullBZ,kxmax,kxmin,nkxmax)
 deallocate(fullBZ)
 deallocate(fulllevels)
 
