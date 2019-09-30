@@ -756,6 +756,9 @@ print*,"E2",kx
 	!print*,BBigdkx
 
 
+	!store the location of kx2
+	platcoord=fff
+
 	!! LOOP over 3
 	kx=kx+BBigdkx
 !print*,'k',kx
@@ -778,11 +781,7 @@ print*,"E2",kx
 	if(slope2.eq.0d0) then
 print*,"use slope2"
 
-		!store the location of the kx3 that gives slope2=0
-		platcoord=fff
-print*,platcoord
-
-		!store and print future data
+		!store and print kx3,E3
 				fff=fff+1 
 				fullBZ(fff)=kx
 print*, "BZ kx3 ",kx
@@ -833,12 +832,10 @@ print*,"BZ slope2 ",kx
 		if(slope2*slope1.ge.0d0) then
 			checkslope2=.true.
 			curvature=(slope2-slope1)/((fff-platcoord)*Bigdkx) !average curvature
-			!slope2=(slope1+slope2)/2
 			Eplateau(1)=Eplateau(2)
 			Eplateau(2)=Eplateau(3)
 		else
 			!prepare to discretize the min
-			kx1=fullBZ(platcoord)
 			kx3=kx
 		endif
 	endif
@@ -846,45 +843,45 @@ print*,"slope1=",slope1
 print*,"slope2=",slope2
 
 	!When needed, see if lowest level is higher than ground state (missed point)
-!	if(&!(((prevcurv.le.curvmax).and.(prevcurv.ge.curvmin)).or.(abs(prevcurv).eq.(abs(prevcurv)-1)))&
-!((abs(curvature).gt.curvmax).or.(curvature.lt.curvmin))&
-!.and.(nlprev.ge.2)&
-!.and..not.(slope2.eq.0d0)) then
-!		!discretize a bit more
-!print*,"passe"
-!		kx2=fullBZ(fff)
-!		tempdkx=(kx3-kx2)/10.
-!		stspec=0
-!		checkgap=.false.
-!		do i=1,10
-!			kx=kx2+i*tempdkx
-!			call computeEkx(Ndata,epsmin,epsmax,dL0,dL1,&
-!				gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
-!				bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
-!				Opnbr,Opnbr1,pot,Lj,phi,varphase,kx,kroot,newlevelLIST,nl,gap,detR)
-!			if(nl.gt.1) nl=1 !! needed to avoid taking into account a higher gap (łe2> - łe1>)
-!! and relying on luck to find łe1> when not łg>.
-!			if(nl.ge.1) spec(stspec+1:stspec+nl)=newlevelLIST(1:nl)
-!			stspec=stspec+nl
-!		enddo
-!		kx=kx3
-!		!sort all the values
-!		call quicksort(spec,1,stspec)
-!		!define the existence of a gap and if the previous Energy3 was above it
-!		forall(i=1:stspec-1) diffgap(i)=spec(i+1)-spec(i)
-!		igap=maxloc(diffgap(1:stspec-1),1)
-!		intergap=diffgap(igap)
-!		intergap1=maxval(diffgap(1:igap-1))
-!		intergap2=maxval(diffgap(igap+1:stspec-1))
-!		if ((intergap1.gt.0).and.(intergap2.gt.0)&
-!.and.(intergap.gt.(3*intergap1)).and.(intergap.gt.(3*intergap2))) checkgap=.true.
-!		if ((checkgap).and.(Eplateau(3).gt.spec(igap-1))) then
-!print*,"Changed E3"
-!			Eplateau(3)=Infinity
-!			slope2=Infinity
-!			curvature=Infinity
-!		endif
-!	endif
+	if(&!(((prevcurv.le.curvmax).and.(prevcurv.ge.curvmin)).or.(abs(prevcurv).eq.(abs(prevcurv)-1)))&
+((abs(curvature).gt.curvmax).or.(curvature.lt.curvmin))&
+.and.(nlprev.ge.2)&
+.and..not.(slope2.eq.0d0)) then
+		!discretize a bit more
+print*,"passe"
+		kx2=fullBZ(fff)
+		tempdkx=(kx3-kx2)/10.
+		stspec=0
+		checkgap=.false.
+		do i=1,10
+			kx=kx2+i*tempdkx
+			call computeEkx(Ndata,epsmin,epsmax,dL0,dL1,&
+				gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
+				bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
+				Opnbr,Opnbr1,pot,Lj,phi,varphase,kx,kroot,newlevelLIST,nl,gap,detR)
+			if(nl.gt.1) nl=1 !! needed to avoid taking into account a higher gap (łe2> - łe1>)
+! and relying on luck to find łe1> when not łg>.
+			if(nl.ge.1) spec(stspec+1:stspec+nl)=newlevelLIST(1:nl)
+			stspec=stspec+nl
+		enddo
+		kx=kx3
+		!sort all the values
+		call quicksort(spec,1,stspec)
+		!define the existence of a gap and if the previous Energy3 was above it
+		forall(i=1:stspec-1) diffgap(i)=spec(i+1)-spec(i)
+		igap=maxloc(diffgap(1:stspec-1),1)
+		intergap=diffgap(igap)
+		intergap1=maxval(diffgap(1:igap-1))
+		intergap2=maxval(diffgap(igap+1:stspec-1))
+		if ((intergap1.gt.0).and.(intergap2.gt.0)&
+.and.(intergap.gt.(3*intergap1)).and.(intergap.gt.(3*intergap2))) checkgap=.true.
+		if ((checkgap).and.(Eplateau(3).gt.spec(igap-1))) then
+print*,"Changed E3"
+			Eplateau(3)=Infinity
+			slope2=Infinity
+			curvature=Infinity
+		endif
+	endif
 
 
 	!keep or start over the 2 previous segments E1-E2 & E2-E3
@@ -926,7 +923,7 @@ print*,"Discretizing"
 				selbot=0
 				checkdown=.false.
 				!!!!! re-descretize the 2 previous segments
-				kx=kx1
+				kx=fullBZ(platcoord-1)
 print*,curvature
 				dkx=min(BBigdkx/1.5,BBigdkx/(100.*log(1+abs(curvature)/100.)))  !!!!!!! here /curvmax
 !print*,dkx
