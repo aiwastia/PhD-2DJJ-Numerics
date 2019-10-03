@@ -9,4 +9,4 @@
 
 #SBATCH --output make.out
 
-make
+./JJ_gap infile_JJ_bands_1 infile_JJ_2
