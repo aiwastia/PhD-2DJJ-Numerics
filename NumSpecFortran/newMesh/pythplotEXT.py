@@ -24,8 +24,8 @@ var=sys.argv[2:6] #var[i] is : or [number]
 abuff=sys.argv[2:6] #copy to avoid overwriting var
 
 loc1=abuff.index(':')
-abuff[loc1:loc1+1]=[]
-loc2=abuff.index(':')+1
+#abuff[loc1:loc1+1]=[]
+loc2=abuff.index('::')#+1
 llist=[0,1,2,3]
 [pos1,pos2]=[x for x in llist if ((x!=loc1) and (x!=loc2))]
 var1=int(var[pos1])
@@ -48,7 +48,8 @@ nstepB=int(nstepB[1:-1])
 nstepmuSC=int(nstepmuSC[1:-1])
 nstepmu=int(nstepmu[1:-1])
 
-nstep=[nstepphi,nstepB,nstepmuSC,nstepmu]
+#ORDER
+nstep=[nstepmu,nstepmuSC,nstepB,nstepphi]
 
 #controls the validity of input
 if ((var1<1) or (var2<1)):
@@ -94,7 +95,7 @@ nnnfresult=np.ndarray.tolist(nnfresult)
 nnnfresult.reverse() #to flip the plot (phi increasing from bottom to top)
 
 #name of file
-varnames=['Phi','B','muSC','mu']
+varnames=['mu','muSC','B','Phi'] #ORDER
 interp='none' #interpolation = none or bilinear
 
 sm=''
