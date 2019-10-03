@@ -32,7 +32,7 @@ complex*16,intent(inout) :: detR
 
 integer :: keps,n,i,kroot
 real*8 :: eps,newlevel,bmagx,mu0,mu01
-complex*16 :: dS(8,8),S1(8,8),S2(8,8),S3(8,8),Sbar(8,8),unitmat(8,8),Sb(8,8)
+complex*16 :: dS(8,8),S1(8,8),S2(8,8),S3(8,8),Sbar(8,8),unitmat(8,8),Sb(8,8),massScattL1J(8,8),massScattJL2(8,8)
 complex*16 :: detRold
 logical :: intest
 
@@ -83,10 +83,16 @@ do keps=0,Ndata !energy loop
    !lead 2
    S3 = S1
 
-   !add potential barrier at both interfaces to include some normal reflection
-   call Sbarrier(Sb,mu0, kx, pot, Lj, potshift, mass, SCmass)
-   call concat(Sb,S2,S2,4)
-   call concat(S2,Sb,S2,4)
+   !!add potential barrier at both interfaces to include some normal reflection
+   !call Sbarrier(Sb,mu0, kx, pot, Lj, potshift, mass, SCmass)
+   !call concat(Sb,S2,S2,4)
+   !call concat(S2,Sb,S2,4)
+
+   !create the scattering between regions of different masses (step)
+   call massStep(massScattL1J,SCmass,mass)
+   call concat(S1,massScattL1J,S1,4)
+   call massStep(massScattJL2,mass,SCmass)
+   call concat(massScattJL2,S3,S3,4)
 
    !compute determinant
    detRold = detR
@@ -100,7 +106,12 @@ do keps=0,Ndata !energy loop
      kroot=1
      newlevel=eps - (epsmax - epsmin)/dble(Ndata)/2d0 !backward extrapolation of a half step for better accuracy
      nl=nl+1
-     newlevelLIST(nl)=newlevel
+     !crucial condition because of memory overwriting without segmentation fault !!!!
+     if (nl.le.size(newlevelLIST)) then
+	newlevelLIST(nl)=newlevel
+     else
+	nl=size(newlevelLIST)
+     endif
      intest=.not.intest
    endif
 enddo
