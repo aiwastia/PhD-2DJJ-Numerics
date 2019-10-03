@@ -36,7 +36,7 @@ call get_infile_newparameters
 
 open(unit=30,file=dataname,form='formatted',status='new')
 
-vartitle=(/ '#phi','B   ','muSC','mu  ','gap ' /)
+vartitle=(/ '#mu ','muSC','B   ','phi ','gap ' /)
 write(30,"(5(a,a))") (vartitle(i),achar(9),i=1,5)
 
 call makelist(trim(Aphilist),Aphiarray,'phi')
@@ -52,14 +52,15 @@ tottime=0
 
 !! LOOPS TO COMPUTE THE GAP USING THE SCATTERING CODE
 
-do g=1,Anstepphi
-	Aloopparam(1)=Aphiarray(g)
-do gg=1,AnstepB
-	Aloopparam(2)=ABarray(gg)
-do ggg=1,AnstepmuSC
-	Aloopparam(3)=AmuSCarray(ggg)
+!if change order here, change in Aloopparam , write(22) and vartitle
 do gggg=1,Anstepmu
-	Aloopparam(4)=Amuarray(gggg)
+	Aloopparam(1)=Amuarray(gggg)
+do ggg=1,AnstepmuSC
+	Aloopparam(2)=AmuSCarray(ggg)
+do gg=1,AnstepB
+	Aloopparam(3)=ABarray(gg)
+do g=1,Anstepphi
+	Aloopparam(4)=Aphiarray(g)
 	
 	!! MODIFYING THE INPUT FILE
 	Apointer=0
@@ -68,10 +69,10 @@ do gggg=1,Anstepmu
 		read(22,'(a4)') Alecture
 		if (Alecture.eq.'mass') then
 			Apointer=1
-			write(22,*) 'Deltaphase2',achar(9),'=',Aloopparam(1)
-			write(22,*) 'bmag',achar(9),achar(9),'=',Aloopparam(2)
-			write(22,*) 'mu0',achar(9),achar(9),'=',Aloopparam(3)
-			write(22,*) 'mu01',achar(9),achar(9),'=',Aloopparam(4)
+			write(22,*) 'Deltaphase2',achar(9),'=',Aloopparam(4)
+			write(22,*) 'bmag',achar(9),achar(9),'=',Aloopparam(3)
+			write(22,*) 'mu0',achar(9),achar(9),'=',Aloopparam(2)
+			write(22,*) 'mu01',achar(9),achar(9),'=',Aloopparam(1)
 			write(22,*) '/'
 		end if
 	end do
@@ -131,9 +132,9 @@ phi = Deltaphase2
  Deltai1 = Deltamag1 * sin(Deltaphase1*pi)
 
  kFmax=mass*alpha+sqrt(2d0*mass*(mu01+bmag1)+mass**2*alpha**2) !keep junction's mass
- kxmax=1.1*kFmax
+ kxmax=2.!1.1*kFmax
  kxmin=0. !1.0*kFmax-2*kFmax/(kFmax*Lmax1)**2
- Bigdkx=0.1!2*Lmax1*min((kxmax-kxmin)/dble(nkxmax),kFmax/(kFmax*Lmax1)**2)
+ Bigdkx=Lmax1*min((kxmax-kxmin)/dble(nkxmax),kFmax/(kFmax*Lmax1)**2)
 print*,'Bigdkx=',Bigdkx
  dkx=min(kFmax/(kFmax*Lmax1)**2, Bigdkx/2.)
 

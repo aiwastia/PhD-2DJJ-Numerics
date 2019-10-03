@@ -188,8 +188,8 @@ subroutine deltaSwire_1ch(dS2,nc,eps,dL,gamma1,mu,Deltar, Deltai,alpha,bmag, bma
     !     - sqrt(2.0 * (sqrt(bmag**2 + alpha**4) - alpha**2)) * alpha**2/bmag
     ! write (*,*) "vF = " , vF
 
-    kFe = sqrt(2d0 * mass * (mu + potshift + eps) )
-    kFh = sqrt(2d0 * mass * (mu + potshift - eps) )
+    kFe = sqrt(2d0 * mass * (potshift + eps) )
+    kFh = sqrt(2d0 * mass * (potshift - eps) )
     
 
 
@@ -234,7 +234,7 @@ subroutine deltaSwire_1ch(dS2,nc,eps,dL,gamma1,mu,Deltar, Deltai,alpha,bmag, bma
     !ww = (st/dL * kF) * ww
     ww = sqrt(gamma1*dL)  * ww
 
-    vpot =  potshift
+    vpot =  potshift-mu
 
     !transmission from the left
     V(1,1) = V(1,1)  - ( vpot * mass / kFe * dL  + ww * mass / kFe )
@@ -443,11 +443,7 @@ implicit none
   complex*16                :: ke, qe, den, ree, tee, thh, rhh, denh, keh, qeh
 
 !initialize Sb
-  do i=1,8 
-     do j=1,8
-        Sb(i,j) = dcmplx(0.0_8, 0.0_8)
-     end do
-  end do
+  Sb(i,j) = dcmplx(0.0_8, 0.0_8)
   
   !electrons
   ke = sqrt(2d0*mass* (mu+potshift+eps))
@@ -491,25 +487,55 @@ implicit none
 
 
   ! add backscattering terms
-  Sb(1,1) = Sb(1,1) + tee
-  Sb(2,2) = Sb(2,2) + tee
-  Sb(3,3) = Sb(3,3) + thh
-  Sb(4,4) = Sb(4,4) + thh
-  Sb(5,5) = Sb(5,5) + tee
-  Sb(6,6) = Sb(6,6) + tee
-  Sb(7,7) = Sb(7,7) + thh
-  Sb(8,8) = Sb(8,8) + thh
+  Sb(1,1) = tee
+  Sb(2,2) = tee
+  Sb(3,3) = thh
+  Sb(4,4) = thh
+  Sb(5,5) = tee
+  Sb(6,6) = tee
+  Sb(7,7) = thh
+  Sb(8,8) = thh
 
-  Sb(5,1) = Sb(5,1) + ree
-  Sb(6,2) = Sb(6,2) + ree
-  Sb(7,3) = Sb(7,3) + rhh
-  Sb(8,4) = Sb(8,4) + rhh
-  Sb(1,5) = Sb(1,5) + ree
-  Sb(2,6) = Sb(2,6) + ree
-  Sb(3,7) = Sb(3,7) + rhh
-  Sb(4,8) = Sb(4,8) + rhh
+  Sb(5,1) = ree
+  Sb(6,2) = ree
+  Sb(7,3) = rhh
+  Sb(8,4) = rhh
+  Sb(1,5) = ree
+  Sb(2,6) = ree
+  Sb(3,7) = rhh
+  Sb(4,8) = rhh
 
 end subroutine Sbarrier
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!	generates the scattering matrix of a step function: jump in masses
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine massStep(massScatt,massL,massR)
+
+complex*16,dimension(8,8),intent(out) :: massScatt
+real*8,intent(in) :: massL,massR
+integer :: i
+
+complex*16 :: r1,r2,t12,t21
+
+!r1=(k-k')/(k+k')
+!t12=2*sqrt(kk')/(k+k')
+r1=(sqrt(massR)-sqrt(massL))/(sqrt(massL)+sqrt(massR))
+t12=2*sqrt(sqrt(massL*massR))/(sqrt(massL)+sqrt(massR))
+r2=-r1
+t21=t12
+
+!same mass for electrons, holes, spins up and down
+massScatt=0
+forall(i=1:4) massScatt(i,i)=t12
+forall(i=5:8) massScatt(i,i)=t21
+forall(i=1:4) massScatt(i,i+4)=r2
+forall(i=5:8) massScatt(i+4,i)=r1
+
+end subroutine massStep
 
 
 
@@ -597,7 +623,7 @@ end if
      call concat(Stot,Sb,Stot,4)
      call concat(Stot,S1,Stot,4)
 
-end subroutine
+end subroutine concat_wire
 
 
 
@@ -646,7 +672,7 @@ Ssc=dcmplx(0d0,0d0)
   Ssc(7,7) = exp( dcmplx(0.0_8,  -1.0_8 * pi * phi) )
   Ssc(8,8) = exp( dcmplx(0.0_8,  -1.0_8 * pi * phi) )  
 
-end subroutine
+end subroutine init_phase_mat
 
 
 
