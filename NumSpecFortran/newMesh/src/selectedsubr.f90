@@ -577,7 +577,7 @@ integer			:: i,j
 character(len=200), intent (in)  	::varphase
 
 
-!initialization
+!initialization to identity
 Stot=dcmplx(0d0,0d0)
 SphaseL=dcmplx(0d0,0d0)
 SphaseR=dcmplx(0d0,0d0)

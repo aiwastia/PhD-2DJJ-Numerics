@@ -686,16 +686,18 @@ endwhite=.true.
 testhole=.false.
 getout=.false.
 
-kx=kxmin
+kx=kxmin-Bigdkx
 fff=0
 ff=0
-
+print*,'kxmax',kxmax
 do while ((kx.le.kxmax).and..not.getout)
 
 	do while(endwhite) !initialize Eplateau after an empty part of spectrum
 		!! INITIAL 1
+		kx=kx+Bigdkx
 		fff=fff+1
 		fullBZ(fff)=kx
+print*,'E1k',kx
 		call computeEkx(Ndata,epsmin,epsmax,dL0,dL1,&
 				gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
 				bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
@@ -720,6 +722,7 @@ print*,"E1",kx
 		kx=kx+BBigdkx
 		fff=fff+1
 		fullBZ(fff)=kx
+print*,'E2k',kx
 		call computeEkx(Ndata,epsmin,epsmax,dL0,dL1,&
 				gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
 				bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
@@ -744,6 +747,12 @@ print*,"E2",kx
 			endwhite=.false.
 		endif
 	slope1=(Eplateau(2)-Eplateau(1))/BBigdkx
+
+	if (kx.gt.kxmax) then
+print*,"get out"
+		getout=.true.
+		exit
+	endif
 	enddo
 
 	!slope1 is copied from slope2
@@ -765,7 +774,7 @@ print*,"E2",kx
 
 	!! LOOP over 3
 	kx=kx+BBigdkx
-!print*,'k',kx
+print*,'k',kx
 	kx3=kx
 	call computeEkx(Ndata,epsmin,epsmax,dL0,dL1,&
 		gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
