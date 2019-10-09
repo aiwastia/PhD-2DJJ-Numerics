@@ -31,7 +31,7 @@ integer,intent(inout) :: gaptest
 complex*16,intent(inout) :: detR
 
 integer :: keps,n,i,kroot
-real*8 :: eps,newlevel,bmagx,mu0,mu01
+real*8 :: eps,newlevel,bmagx,bmagx1,mu0,mu01
 complex*16 :: dS(8,8),S1(8,8),S2(8,8),S3(8,8),Sbar(8,8),unitmat(8,8),Sb(8,8),massScattL1J(8,8),massScattJL2(8,8)
 complex*16 :: detRold
 logical :: intest
@@ -48,8 +48,10 @@ do keps=0,Ndata !energy loop
 
     eps=epsmin + (epsmax - epsmin)/dble(Ndata) * dble(keps) !scan in energy
 	bmagx =-alpha*eps !(*)
-	mu0 = mubuff-eps**2/2d0/SCmass !(*)
-	mu01 = mubuff1-eps**2/2d0/mass !(*)
+	bmagx1=-alpha1*eps !(*)
+	!ma^2/2 because affects velocity which is the only physical dependency of PD
+	mu0 = mubuff-eps**2/2d0/SCmass-SCmass*alpha**2/2d0 !(*)
+	mu01 = mubuff1-eps**2/2d0/mass-mass*alpha1**2/2d0 !(*)
 	if (mu0+potshift<0) write(*,*) 'mu0+potshift negative: ', mu0, '+',potshift,'<0'
 	if (mu01+potshift<0) write(*,*) 'mu0+potshift negative: ', mu01, '+',potshift,'<0'
    
@@ -67,14 +69,14 @@ do keps=0,Ndata !energy loop
 
 
    !lead 1
-   call deltaSwire_1ch(dS,1,kx,dL0,gammatot,mu0,Deltar,Deltai,alpha,0d0*bmag,bmagx,btheta,potshift,SCmass) !(*)
+   call deltaSwire_1ch(dS,1,kx,dL0,gammatot,mu0,Deltar,Deltai,alpha,bmag,bmagx,btheta,potshift*SCmass/mass,SCmass) !(*)
    call concat(dS,S1,S1,4)
    do n=1,Opnbr
       call concat(S1,S1,S1,4)
    enddo
 
    !junction
-   call deltaSwire_1ch(dS,1,kx,dL1,gammatot,mu01,Deltar1,Deltai1,alpha1,bmag1,bmagx,btheta1,potshift,mass) !(*)
+   call deltaSwire_1ch(dS,1,kx,dL1,gammatot,mu01,Deltar1,Deltai1,alpha1,bmag1,bmagx1,btheta1,potshift,mass) !(*)
    call concat(dS,S2,S2,4)
    do n=1,Opnbr1
       call concat(S2,S2,S2,4)
@@ -82,17 +84,6 @@ do keps=0,Ndata !energy loop
 
    !lead 2
    S3 = S1
-
-   !!add potential barrier at both interfaces to include some normal reflection
-   !call Sbarrier(Sb,mu0, kx, pot, Lj, potshift, mass, SCmass)
-   !call concat(Sb,S2,S2,4)
-   !call concat(S2,Sb,S2,4)
-
-   !create the scattering between regions of different masses (step)
-   call massStep(massScattL1J,SCmass,mass)
-   call concat(S1,massScattL1J,S1,4)
-   call massStep(massScattJL2,mass,SCmass)
-   call concat(massScattJL2,S3,S3,4)
 
    !compute determinant
    detRold = detR
@@ -197,7 +188,7 @@ integer :: jj,nkx,gaptest,sec,insite,Ndata,depthc,kroot,nl
 real*8 :: kx,kxmin,kxmax,deps,epsmin,epsmax
 real*8 :: newlevelLIST(20)
 complex*16 :: detR
-logical :: convtest
+!logical :: convtest
 
 
 kxmin=kxminbuff
