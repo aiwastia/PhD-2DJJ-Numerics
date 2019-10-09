@@ -1,13 +1,13 @@
 program PD
+
 ! calculate spectrum using Friedel sum rule (see Eq. (4) in PRL 107, 196804 (2011))
+
 use io
 use selectedsubr
 use scans
 
 implicit none
 
-complex*16          :: dS(8,8), S1(8,8), S2(8,8), S3(8,8), Sbar(8,8), unitmat(8,8), Sb(8,8)
-complex*16          :: detR, detRold
 real*8              :: Deltar,Deltai,Deltar1,Deltai1
 real*8              :: gammatot, bmagx, kx, mubuff, mubuff1, kxmax, kxmin, phi, normres, eps,&
 			            Ekx, Ekx1, Ekx2, kFmax, Bigdkx, dkx, Vslope
@@ -19,6 +19,7 @@ real*8				:: vardata(5)
 real*8,allocatable,dimension(:) :: fullBZ,newlevelLIST
 real*8,allocatable,dimension(:,:) :: fulllevels
 character(len=3) 	:: tempstr
+character(len=6)	:: tempstr2
 
 character(len=4),dimension(5) :: vartitle
 integer :: Ai
@@ -117,8 +118,10 @@ Deltaphase=0d0
 Deltaphase1=0d0
 btheta=0d0
 btheta1=0d0
-bmag1=bmag ! same magnetic field in lead and junction, but bmag=>bmag*0 later
+bmag1=bmag ! same magnetic field in lead and junction
+bmag=0. !set to 0 in leads
 alpha1=alpha !same SOC in the lead and in the junction
+!alpha=0. !set to 0 in leads
 
 gammatot = 0 !disorder amplitude
 varphase='scLR' !specify the system (SC on left and right)
@@ -131,7 +134,7 @@ phi = Deltaphase2
  Deltar1 = Deltamag1 * cos(Deltaphase1*pi)
  Deltai1 = Deltamag1 * sin(Deltaphase1*pi)
 
- kFmax=mass*alpha+sqrt(2d0*mass*(mu01+bmag1)+mass**2*alpha**2) !keep junction's mass
+ kFmax=mass*alpha1+sqrt(2d0*mass*(mu01+bmag1)+mass**2*alpha1**2) !keep junction's mass
  kxmax=0. !1.1*kFmax
  kxmin=0. !1.0*kFmax-2*kFmax/(kFmax*Lmax1)**2
  Bigdkx=Lmax1*min((kxmax-kxmin)/dble(nkxmax),kFmax/(kFmax*Lmax1)**2)
@@ -269,6 +272,9 @@ write(tempstr,'(I3)') AnstepmuSC
 write(31,'(a,a,a,a)') 'AnstepmuSC',achar(9),'=',tempstr
 write(tempstr,'(I3)') Anstepmu
 write(31,'(a,a,a,a)') 'Anstepmu',achar(9),'=',tempstr
+!write(31,*)
+!write(tempstr2,'(F6.1)') tottime/60.0
+!write(31,'(a,a)') '#total time(min) = ', tempstr
 write(31,'(a)') '/'
 close(31)
 

@@ -164,7 +164,7 @@ subroutine deltaSwire_1ch(dS2,nc,eps,dL,gamma1,mu,Deltar, Deltai,alpha,bmag, bma
     real*8,intent(in)       ::potshift, mass
     integer, intent(in)     :: nc ! number of transverse channels
     complex*16,intent(out)  ::dS2(8*nc,8*nc)
-    real*8                  ::x, y, vF, kFe, kFh, mu, vpot,eso, ww ! comps of the disorder potential and kF
+    real*8                  ::x, y, vF, kFe, kFh, mu, vpot,eso, ww! comps of the disorder potential and kF
     complex*16              :: iz 
     complex*16              ::Sn(8*nc,8*nc),Sd(8*nc,8*nc),V(8*nc,8*nc),W(8*nc,8*nc)
     integer                 :: i,j

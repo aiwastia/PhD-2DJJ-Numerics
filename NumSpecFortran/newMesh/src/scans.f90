@@ -43,8 +43,8 @@ newlevelLIST=epsmax
 
 bmagx =-alpha*kx
 bmagx1=-alpha1*kx
-mu0 = mubuff-kx**2/2d0/SCmass
-mu01 = mubuff1-kx**2/2d0/mass
+mu0 = mubuff-kx**2/2d0/SCmass-SCmass*alpha**2/2d0
+mu01 = mubuff1-kx**2/2d0/mass-mass*alpha1**2/2d0
 !if (mu0+potshift<0) write(*,*) 'mu0+potshift negative: ', mu0, '+',potshift,'<0'
 !if (mu01+potshift<0) write(*,*) 'mu0+potshift negative: ', mu01, '+',potshift,'<0'
 
@@ -72,7 +72,7 @@ do keps=0,Ndata !energy loop
 
 
    !lead 1
-   call deltaSwire_1ch(dS,1,eps,dL0,gammatot,mu0,Deltar,Deltai,alpha,0d0*bmag,bmagx,btheta,potshift*SCmass/mass,SCmass)
+   call deltaSwire_1ch(dS,1,eps,dL0,gammatot,mu0,Deltar,Deltai,alpha,bmag,bmagx,btheta,potshift*SCmass/mass,SCmass)
    call concat(dS,S1,S1,4)
    do n=1,Opnbr
       call concat(S1,S1,S1,4)
