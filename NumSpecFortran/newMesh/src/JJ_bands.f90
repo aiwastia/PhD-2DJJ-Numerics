@@ -87,8 +87,8 @@ call get_infile_parameter
 !tempname=trim(dataname(1:lgth-4))
 !outfname=trim(tempname) // '.dat'
 
-write(outfname,'(a,I0,a,I0,a,I0,a,I0,a)') 'test',g,'_',gg,'_',ggg,'_',gggg,'.dat'
-
+!write(outfname,'(a,I0,a,I0,a,I0,a,I0,a)') 'test',g,'_',gg,'_',ggg,'_',gggg,'.dat'
+outfname='test1_1_1_1.dat'
 open(unit=9,file=outfname,status='unknown')
 
 write(9,*)
@@ -132,10 +132,10 @@ phi = Deltaphase2
  Deltai1 = Deltamag1 * sin(Deltaphase1*pi)
 
  kFmax=mass*alpha+sqrt(2d0*mass*(mu01+bmag1)+mass**2*alpha**2) !keep junction's mass
- kxmax=1.1*kFmax
+ kxmax=0. !1.1*kFmax
  kxmin=0. !1.0*kFmax-2*kFmax/(kFmax*Lmax1)**2
  Bigdkx=Lmax1*min((kxmax-kxmin)/dble(nkxmax),kFmax/(kFmax*Lmax1)**2)
-print*,'Bigdkx=',Bigdkx
+!print*,'Bigdkx=',Bigdkx
  dkx=min(kFmax/(kFmax*Lmax1)**2, Bigdkx/2.)
 
 !!!!!!!!!!! SPACE DISCRETIZATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -165,14 +165,15 @@ write(9,*) "#Nseg(1,2,3)=", Nseg,Nseg1,Nseg
 
 
 !!!!!!!!!!!!!!!! REGULAR SCANNING along kx !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!write(9,'(A)') '# kx, energy'
-!allocate(newlevelLIST(5))
-!call horizontal_scanning(Ndata,epsmin,epsmax,dL0,dL1,&
-!			gammatot,mu0,mu01,Deltamag,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
-!			bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
-!			Opnbr,Opnbr1,pot,Lj,phi,varphase,kroot,newlevelLIST,nl,gap,&
-!			kxmin,kxmax,nkxmax)
-!deallocate(newlevelLIST)
+write(9,'(A)') '# kx, energy'
+allocate(newlevelLIST(5))
+nkxmax=1
+call horizontal_scanning(Ndata,epsmin,epsmax,dL0,dL1,&
+			gammatot,mu0,mu01,Deltamag,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
+			bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
+			Opnbr,Opnbr1,pot,Lj,phi,varphase,kroot,newlevelLIST,nl,gap,&
+			kxmin,kxmax,nkxmax)
+deallocate(newlevelLIST)
 
 
 !!!!!!!!!!!!!!!! BACKWARD SCANNING with first slope !!!!!!!!!!!!!!!!!!!!!
@@ -201,17 +202,17 @@ write(9,*) "#Nseg(1,2,3)=", Nseg,Nseg1,Nseg
 
 
 !!!!!!!!!!!!!!!!dynamical discretization with curvature (_curv) or only min/max focus (_min) !!!!!!!!!!!!!!!!!
-write(9,'(A)') '# kx, energy'
-allocate(fullBZ(1000000))
-allocate(fulllevels(1000000,5))
-
-call dyn_scan_min(Ndata,epsmin,epsmax,dL0,dL1,&
-            gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
-            bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
-            Opnbr,Opnbr1,pot,Lj,phi,varphase,gap,&
-            Bigdkx,fulllevels,fullBZ,kxmax,kxmin,nkxmax)
-deallocate(fullBZ)
-deallocate(fulllevels)
+!write(9,'(A)') '# kx, energy'
+!allocate(fullBZ(1000000))
+!allocate(fulllevels(1000000,5))
+!
+!call dyn_scan_min(Ndata,epsmin,epsmax,dL0,dL1,&
+!            gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
+!            bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
+!            Opnbr,Opnbr1,pot,Lj,phi,varphase,gap,&
+!            Bigdkx,fulllevels,fullBZ,kxmax,kxmin,nkxmax)
+!deallocate(fullBZ)
+!deallocate(fulllevels)
 
 
 !!!!!!!!!!!!!!!! VERTICAL SCANNING fix grid !!!!!!!!!!!!!!!!!!!!!!!!!!!!!

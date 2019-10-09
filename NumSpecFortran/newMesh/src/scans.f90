@@ -42,13 +42,20 @@ kroot=0
 newlevelLIST=epsmax
 
 bmagx =-alpha*kx
+
 mu0 = mubuff-kx**2/2d0/SCmass
 mu01 = mubuff1-kx**2/2d0/mass
-if (mu0+potshift<0) write(*,*) 'mu0+potshift negative: ', mu0, '+',potshift,'<0'
-if (mu01+potshift<0) write(*,*) 'mu0+potshift negative: ', mu01, '+',potshift,'<0'
+!if (mu0+potshift<0) write(*,*) 'mu0+potshift negative: ', mu0, '+',potshift,'<0'
+!if (mu01+potshift<0) write(*,*) 'mu0+potshift negative: ', mu01, '+',potshift,'<0'
 
 do keps=0,Ndata !energy loop
 
+!add DGAF for gap
+   if (keps.gt.(Ndata/10)) then
+	gap=min(gap,epsmax/10.)
+	exit
+   endif
+!!
    eps=epsmin + (epsmax - epsmin)/dble(Ndata) * dble(keps) !scan in energy
    
    ! initialize matrix as unit matrix
@@ -65,7 +72,7 @@ do keps=0,Ndata !energy loop
 
 
    !lead 1
-   call deltaSwire_1ch(dS,1,eps,dL0,gammatot,mu0,Deltar,Deltai,alpha,0d0*bmag,bmagx,btheta,potshift,SCmass)
+   call deltaSwire_1ch(dS,1,eps,dL0,gammatot,mu0,Deltar,Deltai,alpha,0d0*bmag,bmagx,btheta,potshift*SCmass/mass,SCmass)
    call concat(dS,S1,S1,4)
    do n=1,Opnbr
       call concat(S1,S1,S1,4)
@@ -82,15 +89,15 @@ do keps=0,Ndata !energy loop
    S3 = S1
 
    !add potential barrier at both interfaces to include some normal reflection
-   call Sbarrier(Sb,mu0, eps, pot, Lj, potshift, mass, SCmass)
-   call concat(Sb,S2,S2,4)
-   call concat(S2,Sb,S2,4)
+   !call Sbarrier(Sb,mu0, eps, pot, Lj, potshift, mass, SCmass)
+   !call concat(Sb,S2,S2,4)
+   !call concat(S2,Sb,S2,4)
 
    !create the scattering between regions of different masses (step)
-   call massStep(massScattL1J,SCmass,mass)
-   call concat(S1,massScattL1J,S1,4)
-   call massStep(massScattJL2,mass,SCmass)
-   call concat(massScattJL2,S3,S3,4)
+   !call massStep(massScattL1J,SCmass,mass)
+   !call concat(S1,massScattL1J,S1,4)
+   !call massStep(massScattJL2,mass,SCmass)
+   !call concat(massScattJL2,S3,S3,4)
 
    !compute determinant
    detRold = detR
@@ -168,7 +175,7 @@ do nkx=0,nkxmax !scan of right-most part of the spectrum
   endif
   call flush(9)
 enddo ! end of loop over transverse momenta kx
-
+print*,'gap',gap
 
 end subroutine horizontal_scanning
 
