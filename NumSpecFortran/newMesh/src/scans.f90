@@ -31,7 +31,7 @@ integer,intent(inout) :: nl
 complex*16,intent(inout) :: detR
 
 integer :: keps,n,i,j
-real*8 :: eps,newlevel,bmagx,mu0,mu01
+real*8 :: eps,newlevel,bmagx,bmagx1,mu0,mu01
 complex*16,dimension(8,8) :: dS,S1,S2,S3,Sbar,unitmat,Sb,massScattL1J,massScattJL2
 complex*16 :: detRold
 
@@ -42,7 +42,7 @@ kroot=0
 newlevelLIST=epsmax
 
 bmagx =-alpha*kx
-
+bmagx1=-alpha1*kx
 mu0 = mubuff-kx**2/2d0/SCmass
 mu01 = mubuff1-kx**2/2d0/mass
 !if (mu0+potshift<0) write(*,*) 'mu0+potshift negative: ', mu0, '+',potshift,'<0'
@@ -79,7 +79,7 @@ do keps=0,Ndata !energy loop
    enddo
 
    !junction
-   call deltaSwire_1ch(dS,1,eps,dL1,gammatot,mu01,Deltar1,Deltai1,alpha1,bmag1,bmagx,btheta1,potshift,mass)
+   call deltaSwire_1ch(dS,1,eps,dL1,gammatot,mu01,Deltar1,Deltai1,alpha1,bmag1,bmagx1,btheta1,potshift,mass)
    call concat(dS,S2,S2,4)
    do n=1,Opnbr1
       call concat(S2,S2,S2,4)
