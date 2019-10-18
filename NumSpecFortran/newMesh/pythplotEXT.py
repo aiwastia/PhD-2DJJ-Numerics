@@ -73,7 +73,11 @@ for x in flines:
     fresult.append(x.split('\t')[4])
 f.close()
 fresult[0:1]=[] #removes the title
-nfresult=[float(fresult[i]) for i in indexsublist]
+nfrresult=np.array([float(fresult[i]) for i in indexsublist])
+
+#focus on gap
+cutoff=0.001
+nfresult=np.where(nfrresult < cutoff ,nfrresult,cutoff)
 
 varval1=flines[indexsublist[0]+1].split('\t')[pos1]
 varval2=flines[indexsublist[0]+1].split('\t')[pos2]
@@ -87,10 +91,10 @@ if minx==maxx:
 if miny==maxy:
 	maxy=maxy+0.1
 	miny=miny-0.1
-print(minx,maxx,miny,maxy)
+#print(minx,maxx,miny,maxy)
 
 #reshape to plot
-nnfresult=np.asarray(nfresult).reshape(nstep[loc1],nstep[loc2])##########################################################################
+nnfresult=nfresult.reshape(nstep[loc1],nstep[loc2])##########################################################################
 nnnfresult=np.ndarray.tolist(nnfresult)
 nnnfresult.reverse() #to flip the plot (phi increasing from bottom to top)
 
