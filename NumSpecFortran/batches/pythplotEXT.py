@@ -76,7 +76,11 @@ for x in flines:
     fresult.append(x.split('\t')[5])
 f.close()
 fresult[0:1]=[] #removes the title
-nfresult=[float(fresult[i]) for i in indexsublist]
+nfrresult=np.array([float(fresult[i]) for i in indexsublist])
+
+#focus on small gaps
+cutoff=0.1
+nfresult=np.where(nfrresult<cutoff,nfrresult,cutoff)
 
 #values for diagram title
 varval1=flines[indexsublist[0]+1].split('\t')[pos1]
@@ -103,7 +107,7 @@ else:
     miny=miny-interv/2.
 
 #reshape to plot
-nnfresult=np.asarray(nfresult).reshape(nstep[loc1],nstep[loc2])
+nnfresult=nfresult.reshape(nstep[loc1],nstep[loc2])
 nnnfresult=np.ndarray.tolist(nnfresult)
 nnnfresult.reverse() #to flip the plot (phi increasing from bottom to top)
 
