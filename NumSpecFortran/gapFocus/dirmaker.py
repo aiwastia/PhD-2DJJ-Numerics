@@ -12,7 +12,7 @@ namedata=ffresult[2:-2]
 namedir=namedata[0:len(namedata)-4]
 
 testdir=os.path.isdir(namedir)
-if testdir:
+while testdir:
 	ow=str(input('Directory already exists. Do you want to erase previous data?(n*/y, with single quotation marks) '))
 	if ow=='y':
 		os.system('rm -i -r '+namedir)
@@ -21,6 +21,7 @@ if testdir:
 		oldname=namedata
 		namedata=namedir+'.txt'
 		os.system('mv '+oldname+' '+namedata)
+	testdir=os.path.isdir(namedir)
 
 namedata2=namedir+'.dat'
 os.system('mkdir '+namedir)
