@@ -134,8 +134,8 @@ subroutine makelist(arrayin,arrayout,flag)
 	implicit none
 	character(len=*),intent(in) :: arrayin,flag
 	real*8,allocatable,dimension(:),intent(out) :: arrayout
-	character(len=20),allocatable,dimension(:) :: subarray,subsubarray
-	character(len=20) :: seq
+	character(len=60),allocatable,dimension(:) :: subarray,subsubarray
+	character(len=60) :: seq
 	integer :: n,i,nn,ntot,ind
 
 	real*8 :: rangemin, rangemax, step, stepnew
@@ -213,7 +213,7 @@ end subroutine makelist
 subroutine stringsplit(str,separator,length,spstr) !string separator with blanks and commas
 	character(len=*),intent(in) :: str,separator
 	integer,intent(out) :: length
-	character(len=20),allocatable,dimension(:),intent(out) :: spstr
+	character(len=60),allocatable,dimension(:),intent(out) :: spstr
 	
 	length=count(transfer(trim(str),'a',len_trim(str))== separator)+1
 	allocate(spstr(length))
@@ -225,7 +225,7 @@ end subroutine stringsplit
 subroutine split_read_real(str,sep,length, aa)
     character(len=*), intent(in) :: str,sep
     integer,intent(out) :: length
-    character(len=20), dimension(:), allocatable :: aa
+    character(len=60), dimension(:), allocatable :: aa
     integer :: n,i
     integer :: from, to, mylen
     n = 1
