@@ -52,7 +52,7 @@ AnstepSCm=size(ASCmarray)
 
 !! LOOPS TO COMPUTE THE GAP USING THE SCATTERING CODE
 
-!if change order here, change in Aloopparam , write(22) and vartitle
+!if change order here, change in Aloopparam , write(22), vartitle and write(30 '') at the end
 do gggg=1,Anstepmu
 	Aloopparam(1)=Amuarray(gggg)
 do ggggg=1,AnstepSCm
@@ -90,8 +90,10 @@ Deltaphase=0d0 !common shift of the phases
 Deltaphase1=0d0 ! in junction
 btheta=0d0
 btheta1=0d0
-bmag1=bmag ! same magnetic field in lead and junction, but bmag=>bmag*0 later
+bmag1=bmag ! same magnetic field in lead and junction
+bmag=0. !set to 0 in leads
 alpha1=alpha !same SOC in the lead and in the junction
+!alpha=0. !set to 0 in leads
 
 gammatot = 0 !disorder amplitude
 varphase='scLR' !specify the system (SC on left and right)
@@ -104,7 +106,7 @@ Deltai = Deltamag * sin(Deltaphase*pi)
 Deltar1 = Deltamag1 * cos(Deltaphase1*pi)
 Deltai1 = Deltamag1 * sin(Deltaphase1*pi)
 
-kFmax=mass*alpha+sqrt(2d0*mass*(mu0+bmag)+mass**2*alpha**2) !in junction
+kFmax=mass*alpha1+sqrt(2d0*mass*(mu01+bmag1)+mass**2*alpha1**2) !in junction
 kxmax=1.1*kFmax
 kxmin=0. !1.0*kFmax-2*kFmax/(kFmax*Lmax1)**2
 dkx=kFmax/(kFmax*Lmax1)**2 / dkfrac
@@ -152,9 +154,8 @@ call dynamical_secante(nkxmax,kxmin,kxmax,dL0,dL1,&
 call dtime(tarray, result)
 tottime=tottime+result
 
-
 	Aloopparam(6)=gap
-	write(30,'(F8.6,a,F8.4,a,F8.3,a,F8.4,a,F8.4,a,F15.12,a)') (Aloopparam(g2),achar(9),g2=1,6) !fill in each column of data to plot
+	write(30,'(F8.4,a,F8.4,a,F8.3,a,F8.4,a,F8.6,a,F15.12,a)') (Aloopparam(g2),achar(9),g2=1,6) !fill in each column of data to plot
     flush(30)
 
 end do !SCmass

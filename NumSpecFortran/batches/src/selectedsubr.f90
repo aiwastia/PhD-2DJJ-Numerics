@@ -189,8 +189,8 @@ subroutine deltaSwire_1ch(dS2,nc,eps,dL,gamma1,mu,Deltar, Deltai,alpha,bmag, bma
     !     - sqrt(2.0 * (sqrt(bmag**2 + alpha**4) - alpha**2)) * alpha**2/bmag
     ! write (*,*) "vF = " , vF
 
-    kFe = sqrt(2d0 * mass * (mu + potshift + eps) )
-    kFh = sqrt(2d0 * mass * (mu + potshift - eps) )
+    kFe = sqrt(2d0 * mass * (potshift + eps) ) !before: mu + potshift + eps
+    kFh = sqrt(2d0 * mass * (potshift - eps) ) !before: mu + potshift - eps
     
 
 
@@ -235,7 +235,7 @@ subroutine deltaSwire_1ch(dS2,nc,eps,dL,gamma1,mu,Deltar, Deltai,alpha,bmag, bma
     !ww = (st/dL * kF) * ww
     ww = sqrt(gamma1*dL)  * ww
 
-    vpot =  potshift
+    vpot =  potshift-mu !before: potshift
 
     !transmission from the left
     V(1,1) = V(1,1)  - ( vpot * mass / kFe * dL  + ww * mass / kFe )
@@ -511,6 +511,38 @@ implicit none
   Sb(4,8) = Sb(4,8) + rhh
 
 end subroutine Sbarrier
+
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!	generates the scattering matrix of a step function: jump in masses
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine massStep(massScatt,massL,massR)
+
+complex*16,dimension(8,8),intent(out) :: massScatt
+real*8,intent(in) :: massL,massR
+integer :: i
+
+complex*16 :: r1,r2,t12,t21
+
+!r1=(k-k')/(k+k')
+!t12=2*sqrt(kk')/(k+k')
+r1=(sqrt(massR)-sqrt(massL))/(sqrt(massL)+sqrt(massR))
+t12=2*sqrt(sqrt(massL*massR))/(sqrt(massL)+sqrt(massR))
+r2=-r1
+t21=t12
+
+!same mass for electrons, holes, spins up and down
+massScatt=0
+forall(i=1:4) massScatt(i,i)=t12
+forall(i=5:8) massScatt(i,i)=t21
+forall(i=1:4) massScatt(i,i+4)=r2
+forall(i=5:8) massScatt(i+4,i)=r1
+
+end subroutine massStep
+
 
 
 

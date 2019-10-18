@@ -31,8 +31,8 @@ integer,intent(inout) :: nl
 complex*16,intent(inout) :: detR
 
 integer :: keps,n,i,j
-real*8 :: eps,newlevel,bmagx,mu0,mu01
-complex*16 :: dS(8,8),S1(8,8),S2(8,8),S3(8,8),Sbar(8,8),unitmat(8,8),Sb(8,8)
+real*8 :: eps,newlevel,bmagx,bmagx1,mu0,mu01
+complex*16,dimension(8,8) :: dS,S1,S2,S3,Sbar,unitmat,Sb,massScattL1J,massScattJL2
 complex*16 :: detRold
 
 
@@ -42,13 +42,20 @@ kroot=0
 newlevelLIST=epsmax
 
 bmagx =-alpha*kx
-mu0 = mubuff-kx**2/2d0/SCmass
-mu01 = mubuff1-kx**2/2d0/mass
-if (mu0+potshift<0) write(*,*) 'mu0+potshift negative: ', mu0, '+',potshift,'<0'
-if (mu01+potshift<0) write(*,*) 'mu0+potshift negative: ', mu01, '+',potshift,'<0'
+bmagx1=-alpha1*kx
+mu0 = mubuff-kx**2/2d0/SCmass-SCmass*alpha**2/2d0
+mu01 = mubuff1-kx**2/2d0/mass-mass*alpha1**2/2d0
+!if (mu0+potshift<0) write(*,*) 'mu0+potshift negative: ', mu0, '+',potshift,'<0'
+!if (mu01+potshift<0) write(*,*) 'mu0+potshift negative: ', mu01, '+',potshift,'<0'
 
 do keps=0,Ndata !energy loop
 
+!add DGAF for gap
+   if (keps.gt.(Ndata/10)) then
+	gap=min(gap,epsmax/10.)
+	exit
+   endif
+!!
    eps=epsmin + (epsmax - epsmin)/dble(Ndata) * dble(keps) !scan in energy
    
    ! initialize matrix as unit matrix
@@ -65,14 +72,14 @@ do keps=0,Ndata !energy loop
 
 
    !lead 1
-   call deltaSwire_1ch(dS,1,eps,dL0,gammatot,mu0,Deltar,Deltai,alpha,0d0*bmag,bmagx,btheta,potshift,SCmass)
+   call deltaSwire_1ch(dS,1,eps,dL0,gammatot,mu0,Deltar,Deltai,alpha,bmag,bmagx,btheta,potshift*SCmass/mass,SCmass)
    call concat(dS,S1,S1,4)
    do n=1,Opnbr
       call concat(S1,S1,S1,4)
    enddo
 
    !junction
-   call deltaSwire_1ch(dS,1,eps,dL1,gammatot,mu01,Deltar1,Deltai1,alpha1,bmag1,bmagx,btheta1,potshift,mass)
+   call deltaSwire_1ch(dS,1,eps,dL1,gammatot,mu01,Deltar1,Deltai1,alpha1,bmag1,bmagx1,btheta1,potshift,mass)
    call concat(dS,S2,S2,4)
    do n=1,Opnbr1
       call concat(S2,S2,S2,4)
@@ -82,9 +89,15 @@ do keps=0,Ndata !energy loop
    S3 = S1
 
    !add potential barrier at both interfaces to include some normal reflection
-   call Sbarrier(Sb,mu0, eps, pot, Lj, potshift, mass, SCmass)
-   call concat(Sb,S2,S2,4)
-   call concat(S2,Sb,S2,4)
+   !call Sbarrier(Sb,mu0, eps, pot, Lj, potshift, mass, SCmass)
+   !call concat(Sb,S2,S2,4)
+   !call concat(S2,Sb,S2,4)
+
+   !create the scattering between regions of different masses (step)
+   !call massStep(massScattL1J,SCmass,mass)
+   !call concat(S1,massScattL1J,S1,4)
+   !call massStep(massScattJL2,mass,SCmass)
+   !call concat(massScattJL2,S3,S3,4)
 
    !compute determinant
    detRold = detR
@@ -162,7 +175,7 @@ do nkx=0,nkxmax !scan of right-most part of the spectrum
   endif
   call flush(9)
 enddo ! end of loop over transverse momenta kx
-
+!print*,'gap',gap
 
 end subroutine horizontal_scanning
 
@@ -680,17 +693,18 @@ endwhite=.true.
 testhole=.false.
 getout=.false.
 
-kx=kxmin
+kx=kxmin-Bigdkx
 fff=0
 ff=0
-
+print*,'kxmax',kxmax
 do while ((kx.le.kxmax).and..not.getout)
 
 	do while(endwhite) !initialize Eplateau after an empty part of spectrum
 		!! INITIAL 1
+		kx=kx+Bigdkx
 		fff=fff+1
 		fullBZ(fff)=kx
-print*,"BZ E1",kx
+print*,'E1k',kx
 		call computeEkx(Ndata,epsmin,epsmax,dL0,dL1,&
 				gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
 				bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
@@ -715,7 +729,7 @@ print*,"E1",kx
 		kx=kx+BBigdkx
 		fff=fff+1
 		fullBZ(fff)=kx
-print*,"BZ E2",kx
+print*,'E2k',kx
 		call computeEkx(Ndata,epsmin,epsmax,dL0,dL1,&
 				gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
 				bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
@@ -740,6 +754,12 @@ print*,"E2",kx
 			endwhite=.false.
 		endif
 	slope1=(Eplateau(2)-Eplateau(1))/BBigdkx
+
+	if (kx.gt.kxmax) then
+print*,"get out"
+		getout=.true.
+		exit
+	endif
 	enddo
 
 	!slope1 is copied from slope2
@@ -761,7 +781,7 @@ print*,"E2",kx
 
 	!! LOOP over 3
 	kx=kx+BBigdkx
-!print*,'k',kx
+print*,'k',kx
 	kx3=kx
 	call computeEkx(Ndata,epsmin,epsmax,dL0,dL1,&
 		gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
@@ -784,9 +804,9 @@ print*,"use slope2"
 		!store and print kx3,E3
 				fff=fff+1 
 				fullBZ(fff)=kx
-print*, "BZ kx3 ",kx
 				if (kroot.gt.0) then
 					write(9,'(F20.13,1x,$)') kx
+print*, "BZ kx3 ",kx
 					do jj=1,nl
 						write(9,'(F20.13,1x,$)') newlevelLIST(jj)
 					enddo
@@ -839,14 +859,16 @@ print*,"BZ slope2 ",kx
 			kx3=kx
 		endif
 	endif
-print*,"slope1=",slope1
-print*,"slope2=",slope2
+!print*,"slope1=",slope1
+!print*,"slope2=",slope2
 
 	!When needed, see if lowest level is higher than ground state (missed point)
-	if(&!(((prevcurv.le.curvmax).and.(prevcurv.ge.curvmin)).or.(abs(prevcurv).eq.(abs(prevcurv)-1)))&
-((abs(curvature).gt.curvmax).or.(curvature.lt.curvmin))&
-.and.(nlprev.ge.2)&
-.and..not.(slope2.eq.0d0)) then
+	if((.not.checkslope2).and.(.not.(curvature.eq.(curvature-1)))&
+.and.((slope1*slope2.le.0).and.(slope1.le.0.))) then !ie, if "Discretizing"
+!(((prevcurv.le.curvmax).and.(prevcurv.ge.curvmin)).or.(abs(prevcurv).eq.(abs(prevcurv)-1)))&
+!((curvature.gt.curvmax).or.(curvature.lt.curvmin))&
+!.and.(nlprev.ge.2)&
+!.and..not.(slope2.eq.0d0)) then
 		!discretize a bit more
 print*,"passe"
 		kx2=fullBZ(fff)
@@ -898,7 +920,6 @@ print*,"Changed E3"
 				!!!!! write if previous energy accepted
 				fff=fff+1
 				fullBZ(fff)=kx
-print*,"normal BZ",kx
 				if (kroot.gt.0) then
 					write(9,'(F20.13,1x,$)') kx
 print*,"normal E",kx
@@ -931,7 +952,6 @@ print*,curvature
 					kx=kx+dkx
 					fff=fff+1
 					fullBZ(fff)=kx
-print*,"disc BZ",kx
 					call computeEkx(Ndata,epsmin,epsmax,dL0,dL1,&
 						gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
 						bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
@@ -1016,7 +1036,7 @@ complex*16,intent(inout) :: detR
 
 integer :: keps,n,i,j
 real*8 :: eps,newlevel,bmagx,mu0,mu01
-complex*16 :: dS(8,8),S1(8,8),S2(8,8),S3(8,8),Sbar(8,8),unitmat(8,8),Sb(8,8)
+complex*16 :: dS(8,8),S1(8,8),S2(8,8),S3(8,8),Sbar(8,8),unitmat(8,8),Sb(8,8),massScattL1J(8,8),massScattJL2(8,8)
 complex*16 :: detRold
 
 !! comment : (*) means kx <-> eps
@@ -1065,9 +1085,15 @@ do keps=0,Ndata !energy loop
    S3 = S1
 
    !add potential barrier at both interfaces to include some normal reflection
-   call Sbarrier(Sb,mu0, kx, pot, Lj, potshift, mass, SCmass)
-   call concat(Sb,S2,S2,4)
-   call concat(S2,Sb,S2,4)
+   !call Sbarrier(Sb,mu0, kx, pot, Lj, potshift, mass, SCmass)
+   !call concat(Sb,S2,S2,4)
+   !call concat(S2,Sb,S2,4)
+
+   !create the scattering between regions of different masses (step)
+   call massStep(massScattL1J,SCmass,mass)
+   call concat(S1,massScattL1J,S1,4)
+   call massStep(massScattJL2,mass,SCmass)
+   call concat(massScattJL2,S3,S3,4)
 
    !compute determinant
    detRold = detR
@@ -1079,7 +1105,12 @@ do keps=0,Ndata !energy loop
      kroot=1
      newlevel=eps - (epsmax - epsmin)/dble(Ndata)/2d0 !backward extrapolation of a half step for better accuracy
      nl=nl+1
-     if (nl.le.size(newlevelLIST)) newlevelLIST(nl)=newlevel
+     !crucial condition because of memory overwriting without segmentation fault !!!!
+     if (nl.le.size(newlevelLIST)) then
+		newlevelLIST(nl)=newlevel
+	 else
+		nl=size(newlevelLIST)
+	 endif
    endif
 enddo
 

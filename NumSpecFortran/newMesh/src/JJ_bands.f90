@@ -1,13 +1,13 @@
 program PD
+
 ! calculate spectrum using Friedel sum rule (see Eq. (4) in PRL 107, 196804 (2011))
+
 use io
 use selectedsubr
 use scans
 
 implicit none
 
-complex*16          :: dS(8,8), S1(8,8), S2(8,8), S3(8,8), Sbar(8,8), unitmat(8,8), Sb(8,8)
-complex*16          :: detR, detRold
 real*8              :: Deltar,Deltai,Deltar1,Deltai1
 real*8              :: gammatot, bmagx, kx, mubuff, mubuff1, kxmax, kxmin, phi, normres, eps,&
 			            Ekx, Ekx1, Ekx2, kFmax, Bigdkx, dkx, Vslope
@@ -19,6 +19,7 @@ real*8				:: vardata(5)
 real*8,allocatable,dimension(:) :: fullBZ,newlevelLIST
 real*8,allocatable,dimension(:,:) :: fulllevels
 character(len=3) 	:: tempstr
+character(len=6)	:: tempstr2
 
 character(len=4),dimension(5) :: vartitle
 integer :: Ai
@@ -36,7 +37,7 @@ call get_infile_newparameters
 
 open(unit=30,file=dataname,form='formatted',status='new')
 
-vartitle=(/ '#phi','B   ','muSC','mu  ','gap ' /)
+vartitle=(/ '#mu ','muSC','B   ','phi ','gap ' /)
 write(30,"(5(a,a))") (vartitle(i),achar(9),i=1,5)
 
 call makelist(trim(Aphilist),Aphiarray,'phi')
@@ -52,14 +53,15 @@ tottime=0
 
 !! LOOPS TO COMPUTE THE GAP USING THE SCATTERING CODE
 
-do g=1,Anstepphi
-	Aloopparam(1)=Aphiarray(g)
-do gg=1,AnstepB
-	Aloopparam(2)=ABarray(gg)
-do ggg=1,AnstepmuSC
-	Aloopparam(3)=AmuSCarray(ggg)
+!if change order here, change in Aloopparam , write(22) and vartitle
 do gggg=1,Anstepmu
-	Aloopparam(4)=Amuarray(gggg)
+	Aloopparam(1)=Amuarray(gggg)
+do ggg=1,AnstepmuSC
+	Aloopparam(2)=AmuSCarray(ggg)
+do gg=1,AnstepB
+	Aloopparam(3)=ABarray(gg)
+do g=1,Anstepphi
+	Aloopparam(4)=Aphiarray(g)
 	
 	!! MODIFYING THE INPUT FILE
 	Apointer=0
@@ -68,10 +70,10 @@ do gggg=1,Anstepmu
 		read(22,'(a4)') Alecture
 		if (Alecture.eq.'mass') then
 			Apointer=1
-			write(22,*) 'Deltaphase2',achar(9),'=',Aloopparam(1)
-			write(22,*) 'bmag',achar(9),achar(9),'=',Aloopparam(2)
-			write(22,*) 'mu0',achar(9),achar(9),'=',Aloopparam(3)
-			write(22,*) 'mu01',achar(9),achar(9),'=',Aloopparam(4)
+			write(22,*) 'Deltaphase2',achar(9),'=',Aloopparam(4)
+			write(22,*) 'bmag',achar(9),achar(9),'=',Aloopparam(3)
+			write(22,*) 'mu0',achar(9),achar(9),'=',Aloopparam(2)
+			write(22,*) 'mu01',achar(9),achar(9),'=',Aloopparam(1)
 			write(22,*) '/'
 		end if
 	end do
@@ -86,8 +88,8 @@ call get_infile_parameter
 !tempname=trim(dataname(1:lgth-4))
 !outfname=trim(tempname) // '.dat'
 
-write(outfname,'(a,I0,a,I0,a,I0,a,I0,a)') 'test',g,'_',gg,'_',ggg,'_',gggg,'.dat'
-
+!write(outfname,'(a,I0,a,I0,a,I0,a,I0,a)') 'test',g,'_',gg,'_',ggg,'_',gggg,'.dat'
+outfname='test1_1_1_1.dat'
 open(unit=9,file=outfname,status='unknown')
 
 write(9,*)
@@ -116,8 +118,10 @@ Deltaphase=0d0
 Deltaphase1=0d0
 btheta=0d0
 btheta1=0d0
-bmag1=bmag ! same magnetic field in lead and junction, but bmag=>bmag*0 later
+bmag1=bmag ! same magnetic field in lead and junction
+bmag=0. !set to 0 in leads
 alpha1=alpha !same SOC in the lead and in the junction
+!alpha=0. !set to 0 in leads
 
 gammatot = 0 !disorder amplitude
 varphase='scLR' !specify the system (SC on left and right)
@@ -130,11 +134,11 @@ phi = Deltaphase2
  Deltar1 = Deltamag1 * cos(Deltaphase1*pi)
  Deltai1 = Deltamag1 * sin(Deltaphase1*pi)
 
- kFmax=mass*alpha+sqrt(2d0*mass*(mu01+bmag1)+mass**2*alpha**2) !keep junction's mass
- kxmax=1.1*kFmax
+ kFmax=mass*alpha1+sqrt(2d0*mass*(mu01+bmag1)+mass**2*alpha1**2) !keep junction's mass
+ kxmax=0. !1.1*kFmax
  kxmin=0. !1.0*kFmax-2*kFmax/(kFmax*Lmax1)**2
- Bigdkx=0.1!2*Lmax1*min((kxmax-kxmin)/dble(nkxmax),kFmax/(kFmax*Lmax1)**2)
-print*,'Bigdkx=',Bigdkx
+ Bigdkx=Lmax1*min((kxmax-kxmin)/dble(nkxmax),kFmax/(kFmax*Lmax1)**2)
+!print*,'Bigdkx=',Bigdkx
  dkx=min(kFmax/(kFmax*Lmax1)**2, Bigdkx/2.)
 
 !!!!!!!!!!! SPACE DISCRETIZATION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -164,14 +168,15 @@ write(9,*) "#Nseg(1,2,3)=", Nseg,Nseg1,Nseg
 
 
 !!!!!!!!!!!!!!!! REGULAR SCANNING along kx !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!write(9,'(A)') '# kx, energy'
-!allocate(newlevelLIST(5))
-!call horizontal_scanning(Ndata,epsmin,epsmax,dL0,dL1,&
-!			gammatot,mu0,mu01,Deltamag,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
-!			bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
-!			Opnbr,Opnbr1,pot,Lj,phi,varphase,kroot,newlevelLIST,nl,gap,&
-!			kxmin,kxmax,nkxmax)
-!deallocate(newlevelLIST)
+write(9,'(A)') '# kx, energy'
+allocate(newlevelLIST(5))
+nkxmax=1
+call horizontal_scanning(Ndata,epsmin,epsmax,dL0,dL1,&
+			gammatot,mu0,mu01,Deltamag,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
+			bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
+			Opnbr,Opnbr1,pot,Lj,phi,varphase,kroot,newlevelLIST,nl,gap,&
+			kxmin,kxmax,nkxmax)
+deallocate(newlevelLIST)
 
 
 !!!!!!!!!!!!!!!! BACKWARD SCANNING with first slope !!!!!!!!!!!!!!!!!!!!!
@@ -200,17 +205,17 @@ write(9,*) "#Nseg(1,2,3)=", Nseg,Nseg1,Nseg
 
 
 !!!!!!!!!!!!!!!!dynamical discretization with curvature (_curv) or only min/max focus (_min) !!!!!!!!!!!!!!!!!
-write(9,'(A)') '# kx, energy'
-allocate(fullBZ(1000000))
-allocate(fulllevels(1000000,5))
-
-call dyn_scan_min(Ndata,epsmin,epsmax,dL0,dL1,&
-            gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
-            bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
-            Opnbr,Opnbr1,pot,Lj,phi,varphase,gap,&
-            Bigdkx,fulllevels,fullBZ,kxmax,kxmin,nkxmax)
-deallocate(fullBZ)
-deallocate(fulllevels)
+!write(9,'(A)') '# kx, energy'
+!allocate(fullBZ(1000000))
+!allocate(fulllevels(1000000,5))
+!
+!call dyn_scan_min(Ndata,epsmin,epsmax,dL0,dL1,&
+!            gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
+!            bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
+!            Opnbr,Opnbr1,pot,Lj,phi,varphase,gap,&
+!            Bigdkx,fulllevels,fullBZ,kxmax,kxmin,nkxmax)
+!deallocate(fullBZ)
+!deallocate(fulllevels)
 
 
 !!!!!!!!!!!!!!!! VERTICAL SCANNING fix grid !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -267,6 +272,9 @@ write(tempstr,'(I3)') AnstepmuSC
 write(31,'(a,a,a,a)') 'AnstepmuSC',achar(9),'=',tempstr
 write(tempstr,'(I3)') Anstepmu
 write(31,'(a,a,a,a)') 'Anstepmu',achar(9),'=',tempstr
+!write(31,*)
+!write(tempstr2,'(F6.1)') tottime/60.0
+!write(31,'(a,a)') '#total time(min) = ', tempstr
 write(31,'(a)') '/'
 close(31)
 
