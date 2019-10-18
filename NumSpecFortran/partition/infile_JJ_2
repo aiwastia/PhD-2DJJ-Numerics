@@ -1,0 +1,17 @@
+&newparameters
+dataname	='tes20t.txt'
+
+Aphilist	='0.:101:1.'
+ABlist		='0.:101:20.0'
+AmuSClist	='15.'
+Amulist		='15.'
+ASCmlist	='1.'
+
+Anstepphi	=100
+AnstepB		=100
+AnstepmuSC	=  1
+Anstepmu	=  1
+AnstepSCm	=  1
+
+partition	= 20
+/
