@@ -1,8 +1,8 @@
 &newparameters
-dataname	='tes20t.txt'
+dataname	='timer.txt'
 
-Aphilist	='0.:101:1.'
-ABlist		='0.:101:20.0'
+Aphilist	='0.:6:1.'
+ABlist		='0.:20:20.0'
 AmuSClist	='15.'
 Amulist		='15.'
 ASCmlist	='1.'
