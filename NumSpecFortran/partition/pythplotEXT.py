@@ -5,6 +5,8 @@ import sys
 
 ##to run as follow: python pythplotEXT.py dataname param1 param2 param3 param4
 
+cutoff=0.5
+
 #extract name of data
 namedir=sys.argv[1]
 namedata=namedir+'.txt'
@@ -79,7 +81,6 @@ fresult[0:1]=[] #removes the title
 nfrresult=np.array([float(fresult[i]) for i in indexsublist])
 
 #focus on small gaps
-cutoff=0.1
 nfresult=np.where(nfrresult<cutoff,nfrresult,cutoff)
 
 #values for diagram title
