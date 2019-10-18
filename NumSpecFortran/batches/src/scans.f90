@@ -27,7 +27,7 @@ real*8,intent(in) 	:: epsmin,epsmax,dL0,dL1,&
 character(len=200),intent(in) :: varphase
 real*8,intent(out)	:: newlevelLIST(20)
 integer, intent(out) :: insite,nl
-integer,intent(inout) :: gaptest
+integer,intent(out) :: gaptest
 complex*16,intent(inout) :: detR
 
 integer :: keps,n,i,kroot
@@ -44,9 +44,12 @@ newlevelLIST=epsmax
 intest=.false.
 insite=0
 
+gaptest=0
+
 do keps=0,Ndata !energy loop
 
-    eps=epsmin + (epsmax - epsmin)/dble(Ndata) * dble(keps) !scan in energy
+	!eps=epsmin + (epsmax - epsmin)/dble(Ndata) * dble(keps) !scan in energy
+	eps=epsmax - (epsmax - epsmin)/dble(Ndata) * dble(keps) !scan in energy
 	bmagx =-alpha*eps !(*)
 	bmagx1=-alpha1*eps !(*)
 	!ma^2/2 because affects velocity which is the only physical dependency of PD
@@ -55,59 +58,64 @@ do keps=0,Ndata !energy loop
 	if (mu0+potshift<0) write(*,*) 'mu0+potshift negative: ', mu0, '+',potshift,'<0'
 	if (mu01+potshift<0) write(*,*) 'mu0+potshift negative: ', mu01, '+',potshift,'<0'
    
-   ! initialize matrix as unit matrix
-   unitmat=dcmplx(0,0)
-   forall (i=1:8) unitmat(i,i)=dcmplx(1,0)
-   S1=unitmat
-   S2=unitmat
-   S3=unitmat
-   Sbar=0
-   do i=1,4
-         Sbar(i,i+4) = dcmplx(-1.d0,0.d0)
-         Sbar(i+4,i) = dcmplx(-1.d0,0.d0)
-   enddo
+	! initialize matrix as unit matrix
+	unitmat=dcmplx(0,0)
+	forall (i=1:8) unitmat(i,i)=dcmplx(1,0)
+	S1=unitmat
+	S2=unitmat
+	S3=unitmat
+	Sbar=0
+	do i=1,4
+		Sbar(i,i+4) = dcmplx(-1.d0,0.d0)
+		Sbar(i+4,i) = dcmplx(-1.d0,0.d0)
+	enddo
 
 
-   !lead 1
-   call deltaSwire_1ch(dS,1,kx,dL0,gammatot,mu0,Deltar,Deltai,alpha,bmag,bmagx,btheta,potshift*SCmass/mass,SCmass) !(*)
-   call concat(dS,S1,S1,4)
-   do n=1,Opnbr
-      call concat(S1,S1,S1,4)
-   enddo
+	!lead 1
+	call deltaSwire_1ch(dS,1,kx,dL0,gammatot,mu0,Deltar,Deltai,alpha,bmag,bmagx,btheta,potshift*SCmass/mass,SCmass) !(*)
+	call concat(dS,S1,S1,4)
+	do n=1,Opnbr
+		call concat(S1,S1,S1,4)
+	enddo
 
-   !junction
-   call deltaSwire_1ch(dS,1,kx,dL1,gammatot,mu01,Deltar1,Deltai1,alpha1,bmag1,bmagx1,btheta1,potshift,mass) !(*)
-   call concat(dS,S2,S2,4)
-   do n=1,Opnbr1
-      call concat(S2,S2,S2,4)
-   enddo
+	!junction
+	call deltaSwire_1ch(dS,1,kx,dL1,gammatot,mu01,Deltar1,Deltai1,alpha1,bmag1,bmagx1,btheta1,potshift,mass) !(*)
+	call concat(dS,S2,S2,4)
+	do n=1,Opnbr1
+		call concat(S2,S2,S2,4)
+	enddo
 
-   !lead 2
-   S3 = S1
+	!lead 2
+	S3 = S1
 
-   !compute determinant
-   detRold = detR
-   detR = detringconcat(S1,S2,S3,Sbar,phi/2.,varphase)
+	!compute determinant
+	detRold = detR
+	detR = detringconcat(S1,S2,S3,Sbar,phi/2.,varphase)
 
-    if ((active.eq.1).and.(intest)) insite=insite+1
+	if ((active.eq.1).and.(intest)) insite=insite+1
 
-   ! detR = det(1-S), this changes sign when there is a state
-   ! the change in sign for both real and imaginary parts of the determinant is a sufficient condition for non-degenerate states
-   if ((keps.gt.0).and.(dreal(detR)*dreal(detRold).lt.0d0).and.(dimag(detR)*dimag(detRold).lt.0d0) ) then 
-     kroot=1
-     newlevel=eps - (epsmax - epsmin)/dble(Ndata)/2d0 !backward extrapolation of a half step for better accuracy
-     nl=nl+1
-     !crucial condition because of memory overwriting without segmentation fault !!!!
-     if (nl.le.size(newlevelLIST)) then
-	newlevelLIST(nl)=newlevel
-     else
-	nl=size(newlevelLIST)
-     endif
-     intest=.not.intest
-   endif
+	! detR = det(1-S), this changes sign when there is a state
+	! the change in sign for both real and imaginary parts of the determinant is a sufficient condition for non-degenerate states
+	if ((keps.gt.0).and.(dreal(detR)*dreal(detRold).lt.0d0).and.(dimag(detR)*dimag(detRold).lt.0d0) ) then 
+		kroot=1
+		newlevel=eps - (epsmax - epsmin)/dble(Ndata)/2d0 !backward extrapolation of a half step for better accuracy
+		nl=nl+1
+		!crucial condition because of memory overwriting without segmentation fault !!!!
+		if (nl.le.size(newlevelLIST)) then
+			newlevelLIST(nl)=newlevel
+		else
+			nl=size(newlevelLIST)
+		endif
+		intest=.not.intest
+	endif
+   
+	if(insite.ge.3) then
+		!print*,"exit after ", keps, " steps"
+		exit
+	endif
 enddo
 
-if(kroot.eq.1) gaptest=gaptest+1
+if(kroot.eq.1) gaptest=1
 
 end subroutine computeKxe
 
@@ -196,53 +204,50 @@ kxmax=kxmaxbuff
 epsmin=epsminbuff
 epsmax=epsmaxbuff
 Ndata=Ndatabuff
-depthc=depth
+!depthc=depth
 
-gaptest=0
 !convtest=.false.
 
 do sec=1,secant
-    kx = (kxmax+kxmin)/2d0
-    call computeKxe(Ndata,epsmin,epsmax,dL0,dL1,&
-                gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
+	kx = (kxmax+kxmin)/2d0
+	!print*,"eps=",kx
+	call computeKxe(Ndata,epsmin,epsmax,dL0,dL1,&
+	            gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
                 bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
                 Opnbr,Opnbr1,pot,Lj,phi,varphase,kx,kroot,newlevelLIST,nl,gaptest,&
                 detR,1,insite)
-    !print*,insite
-    !print*, epsmin,epsmax
-    !print*,kx
-    if(gaptest.eq.1) then !ie if kx cut the spectrum
-        if((insite.eq.1).and.(nl.eq.2)) then !ie if there is a single point of the grid at the bottom of the minimum
-            gap=(kxmax+kxmin)/2d0
-            depthc=depthc-1
-            if (depthc.lt.0) then
-                !convtest=.true.
-                exit
-            endif
-            deps=(epsmax-epsmin)/dble(Ndata)
-            epsmin=newlevelLIST(1)-deps/2.
-            epsmax=newlevelLIST(1)+deps
-            !print*,epsmin,epsmax
-            Ndata=100
-            kxmin=kxminbuff
-            kxmax=kx
-            gaptest=0
-        else  !!ie insite > 1 because insite=0 is excluded by gaptest=1
-            kxmax=kx
-            gap=(kxmax+kxmin)/2d0
-            gaptest=0
-        endif
-    else !ie if kx doesn't cut the spectrum
-        if(abs(kxmin-kxmax).le.1d-13) then !doesn't mean the precision on the gap
-! because it depends on the horizontal mesh grid
-! The precisions tend to the same value for large depth, but it's beyond machine precision on these numbers (here)
-            !print*,'check'
-            gap=kxmin
-            exit
-        endif
-        kxmin=kx
-        gaptest=0
-    endif
+    !print*,"insite=", insite
+    !print*,"kxmin,max=", epsmin,epsmax
+	if(gaptest.eq.1) then !ie if kx cut the spectrum
+		if((insite.eq.1).and.(nl.eq.2)) then !ie if there is a single point of the grid at the bottom of the minimum
+			gap=(kxmax+kxmin)/2d0
+			!depthc=depthc-1 !light control to avoid loosing yourself far in the depth
+			!if (depthc.lt.0) then
+			!	!convtest=.true.
+			!	exit
+			!endif
+			deps=(epsmax-epsmin)/dble(Ndata)
+			epsmin=newlevelLIST(1)-deps*0.5d0
+			epsmax=newlevelLIST(1)+deps*1.5d0
+			!print*,"new kxmin,max=",epsmin,epsmax
+			Ndata=50
+			kxmin=kxminbuff !can't extrapolate a closer min
+			kxmax=kx
+		else  !!ie insite > 1 because insite=0 is excluded by gaptest=1
+			kxmax=kx
+			gap=(kxmax+kxmin)/2d0
+		endif
+
+	else !ie if kx doesn't cut the spectrum
+		if(abs(kxmin-kxmax).le.1d-13) then !doesn't mean the precision on the gap
+			!print*,'check'
+			gap=kxmin
+			exit
+		endif
+		kxmin=kx
+	endif
+
+	!print*,"epsmin,max= ", kxmin,kxmax
 enddo
 
 !if (convtest) then
