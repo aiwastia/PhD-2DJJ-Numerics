@@ -175,7 +175,7 @@ do nkx=0,nkxmax !scan of right-most part of the spectrum
   endif
   call flush(9)
 enddo ! end of loop over transverse momenta kx
-print*,'gap',gap
+!print*,'gap',gap
 
 end subroutine horizontal_scanning
 
