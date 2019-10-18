@@ -35,8 +35,6 @@ partition=int(Wpartition[1:-1])
 
 
 
-
-
 ##########################################################
 # function that cuts apart ONLY a ':' sequence
 
@@ -70,8 +68,11 @@ def seq_gen(list_crypt,index):
 			else :
 				print("#Need a number of steps or a smaller step in parameter ")
 				exit()
-
-		Pnstep=nstepnew/partition #integer division (int floor)
+		if nstepnew>partition:
+			print("#'Partition' should be lower than the number of steps in Blist.")
+			exit()
+		else :
+			Pnstep=nstepnew/partition #integer division (int floor)
 		Pstart=start+index*Pnstep*stepnew
 		Pend=min(Pstart+(Pnstep-1)*stepnew,end)
 		newpartition=int(math.ceil(nstepnew/float(Pnstep))) #avoid integer division
@@ -83,6 +84,7 @@ def seq_gen(list_crypt,index):
 	return seq_ind,Pnstep,newpartition
 ###############################################################
 
+
 #ISOLATE the discrete values of series for mu, SCm, muSC
 listmu=WWmulist.split(',') #each element is a string
 listSCm=WWSCmlist.split(',')
@@ -93,6 +95,7 @@ NmuSC=len(listmuSC)
 
 #UPDATE 'partition' to 'newpartition'
 seqB,NB,newpartition=seq_gen(WWBlist,0)
+NBtot=0
 
 #LOOP that generates all the subfolders and run the bash files
 for p in range(Nmu):
@@ -103,9 +106,10 @@ for p in range(Nmu):
 			muSC=listmuSC[ppp]
 			for i in range(newpartition):
 				seqB,NB,P=seq_gen(WWBlist,i)
+				NBtot+=NB
 
 				#TEST availability of subfolders' names
-				foldname=dataname+str(p+1)+'_'+str(pp+1)+'_'+str(ppp+1)+'_part'+str(i+1)
+				foldname=dataname+'_'+str(p+1)+'_'+str(pp+1)+'_'+str(ppp+1)+'_part'+str(i+1)
 				testdir=os.path.isdir(foldname)
 				while testdir:
 					ow=str(input('Directory already exists. Do you want to erase previous data?(n*/y, with single quotation marks) '))
@@ -157,14 +161,23 @@ for p in range(Nmu):
 				os.system('cp ClusterRun_tmp '+foldname+'/ClusterRun.sh')
 
 				#RUN bash script
-				#os.system('sbatch '+foldname+'/ClusterRun.sh')
+				os.system('sbatch '+foldname+'/ClusterRun.sh')
 
 
 #CLEAN a little bit
 os.system('rm infile_JJ_2_tmp')
 os.system('rm ClusterRun_tmp')
 
-
+#COPY the initial input file + add total nstepB and newpartition
+os.system('cp infile_JJ_bands_1 infile_JJ_bands_1_'+dataname)
+with open('infile_JJ_2_'+dataname,"w") as gg:
+	for li in range(len(fflines)):
+		if li==10:
+			gg.write('AnstepB\t\t='+str(NBtot)+'\n')
+		elif li==15:
+			gg.write('partition\t= '+str(newpartition)+'\n')
+		else:
+			gg.write(fflines[li])
 
 
 
