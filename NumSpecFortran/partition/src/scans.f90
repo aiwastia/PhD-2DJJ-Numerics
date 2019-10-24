@@ -14,16 +14,15 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 subroutine computeKxe(Ndata,epsmin,epsmax,& !!meaning nkxmax kxmin kxmax
-			dL0,dL1,&
-			gammatot,mubuff,mubuff1,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
-			bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
-			Opnbr,Opnbr1,pot,Lj,phi,varphase,kx,kroot,newlevelLIST,nl,gaptest,&
-            detR,active,insite) !!kx meaning energy level En
+			gammatot,varphase,potshift,phi,&
+			mubuff,Deltar,Deltai,alpha,bmag,btheta,SCmass,Opnbr,dL0,&
+			mubuff1,Deltar1,Deltai1,alpha1,bmag1,btheta1,mass,Opnbr1,dL1,&
+			kx,kroot,newlevelLIST,nl,gaptest,detR,active,insite) !!kx meaning energy level En
 
 integer, intent(in)	:: Ndata,Opnbr,Opnbr1,active
 real*8,intent(in) 	:: epsmin,epsmax,dL0,dL1,&
 			Deltar,Deltai,Deltar1,Deltai1,alpha,alpha1,mubuff,mubuff1,SCmass,mass,&
-			gammatot,potshift,pot,Lj,bmag,bmag1,btheta,btheta1,phi,kx
+			gammatot,potshift,bmag,bmag1,btheta,btheta1,phi,kx
 character(len=200),intent(in) :: varphase
 real*8,intent(out)	:: newlevelLIST(20)
 integer, intent(out) :: insite,nl
@@ -55,8 +54,8 @@ do keps=0,Ndata !energy loop
 	!ma^2/2 because affects velocity which is the only physical dependency of PD
 	mu0 = mubuff-eps**2/2d0/SCmass-SCmass*alpha**2/2d0 !(*)
 	mu01 = mubuff1-eps**2/2d0/mass-mass*alpha1**2/2d0 !(*)
-	if (mu0+potshift<0) write(*,*) 'mu0+potshift negative: ', mu0, '+',potshift,'<0'
-	if (mu01+potshift<0) write(*,*) 'mu0+potshift negative: ', mu01, '+',potshift,'<0'
+!	if (mu0+potshift<0) write(*,*) 'mu0+potshift negative: ', mu0, '+',potshift,'<0'
+!	if (mu01+potshift<0) write(*,*) 'mu0+potshift negative: ', mu01, '+',potshift,'<0'
    
 	! initialize matrix as unit matrix
 	unitmat=dcmplx(0,0)
@@ -124,17 +123,16 @@ end subroutine computeKxe
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!! VERTICAL secante along E !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine vertical_secante(Ndata,epsmin,epsmax,& !! meaning nkxmax,kxmin,kxmax
-			dL0,dL1,&
-			gammatot,mu0,mu01,Deltamag,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
-			bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
-			Opnbr,Opnbr1,pot,Lj,phi,varphase,gap,&
-			kxminbuff,kxmaxbuff,secant) !! meaning epsmin,epsmax,Ndata
+subroutine vertical_secante(Ndata,epsmin,epsmax,& !!meaning nkxmax kxmin kxmax
+			gammatot,varphase,potshift,phi,&
+			mu0,Deltar,Deltai,alpha,bmag,btheta,SCmass,Opnbr,dL0,&
+			mu01,Deltar1,Deltai1,alpha1,bmag1,btheta1,mass,Opnbr1,dL1,&
+			gap,kxminbuff,kxmaxbuff,secant) !! meaning epsmin,epsmax,Ndata
 
 integer, intent(in)	:: Ndata,Opnbr,Opnbr1,secant
 real*8,intent(in) 	:: epsmin,epsmax,dL0,dL1,&
-			Deltamag,Deltar,Deltai,Deltar1,Deltai1,alpha,alpha1,mu0,mu01,SCmass,mass,&
-			gammatot,potshift,pot,Lj,bmag,bmag1,btheta,btheta1,phi,&
+			Deltar,Deltai,Deltar1,Deltai1,alpha,alpha1,mu0,mu01,SCmass,mass,&
+			gammatot,potshift,bmag,bmag1,btheta,btheta1,phi,&
 			kxminbuff,kxmaxbuff
 character(len=200),intent(in) :: varphase
 real*8,intent(out) :: gap
@@ -151,11 +149,11 @@ gaptest=0
 
 do sec=1,secant
 	kx = (kxmax+kxmin)/2d0
-	call computeKxe(Ndata,epsmin,epsmax,dL0,dL1,&
-			gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
-			bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
-			Opnbr,Opnbr1,pot,Lj,phi,varphase,kx,kroot,newlevelLIST,nl,gaptest,&
-            detR,0,insite)
+	call computeKxe(Ndata,epsmin,epsmax,& !!meaning nkxmax kxmin kxmax
+			gammatot,varphase,potshift,phi,&
+			mu0,Deltar,Deltai,alpha,bmag,btheta,SCmass,Opnbr,dL0,&
+			mu01,Deltar1,Deltai1,alpha1,bmag1,btheta1,mass,Opnbr1,dL1,&
+			kx,kroot,newlevelLIST,nl,gaptest,detR,0,insite)
 	
     if(gaptest.eq.1) then
         kxmax=kx
@@ -178,16 +176,15 @@ end subroutine vertical_secante
 !!!!!!!!!!!!!!!!! VERTICAL secante & DYNAMICAL kx !!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 subroutine dynamical_secante(Ndatabuff,epsminbuff,epsmaxbuff,& !! meaning nkxmax,kxmin,kxmax
-            dL0,dL1,&
-            gammatot,mu0,mu01,Deltamag,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
-            bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
-            Opnbr,Opnbr1,pot,Lj,phi,varphase,gap,&
-            kxminbuff,kxmaxbuff,secant,depth) !! meaning epsmin,epsmax,Ndata
+            		gammatot,varphase,potshift,phi,&
+			mu0,Deltar,Deltai,alpha,bmag,btheta,SCmass,Opnbr,dL0,&
+			mu01,Deltar1,Deltai1,alpha1,bmag1,btheta1,mass,Opnbr1,dL1,&
+            		gap,kxminbuff,kxmaxbuff,secant,depth) !! meaning epsmin,epsmax,Ndata
 
 integer, intent(in)    :: Ndatabuff,Opnbr,Opnbr1,secant,depth
 real*8,intent(in)     :: epsminbuff,epsmaxbuff,dL0,dL1,&
-            Deltamag,Deltar,Deltai,Deltar1,Deltai1,alpha,alpha1,mu0,mu01,SCmass,mass,&
-            gammatot,potshift,pot,Lj,bmag,bmag1,btheta,btheta1,phi,&
+            Deltar,Deltai,Deltar1,Deltai1,alpha,alpha1,mu0,mu01,SCmass,mass,&
+            gammatot,potshift,bmag,bmag1,btheta,btheta1,phi,&
             kxminbuff,kxmaxbuff
 character(len=200),intent(in) :: varphase
 real*8,intent(out) :: gap
@@ -211,11 +208,11 @@ Ndata=Ndatabuff
 do sec=1,secant
 	kx = (kxmax+kxmin)/2d0
 	!print*,"eps=",kx
-	call computeKxe(Ndata,epsmin,epsmax,dL0,dL1,&
-	            gammatot,mu0,mu01,Deltar,Deltar1,Deltai,Deltai1,alpha,alpha1,&
-                bmag,bmag1,btheta,btheta1,potshift,SCmass,mass,&
-                Opnbr,Opnbr1,pot,Lj,phi,varphase,kx,kroot,newlevelLIST,nl,gaptest,&
-                detR,1,insite)
+	call computeKxe(Ndata,epsmin,epsmax,& !!meaning nkxmax kxmin kxmax
+			gammatot,varphase,potshift,phi,&
+			mu0,Deltar,Deltai,alpha,bmag,btheta,SCmass,Opnbr,dL0,&
+			mu01,Deltar1,Deltai1,alpha1,bmag1,btheta1,mass,Opnbr1,dL1,&
+			kx,kroot,newlevelLIST,nl,gaptest,detR,1,insite)
     !print*,"insite=", insite
     !print*,"kxmin,max=", epsmin,epsmax
 	if(gaptest.eq.1) then !ie if kx cut the spectrum

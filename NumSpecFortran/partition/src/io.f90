@@ -2,14 +2,11 @@ module io
 
 implicit none
 
-real*8          :: dL, dL0, dL1, dL2, dLJ, epsmin,epsmax,dkfrac
-real*8		:: Lmax,bmag,btheta,alpha,Deltamag,Deltaphase,mu0
-real*8		:: Lmax1,bmag1,btheta1,alpha1,Deltamag1,Deltaphase1,mu01
-real*8		:: phi!Deltaphase2
-real*8          :: potshift, pot, Lj, SCmass, mass
-integer         :: Nseg,Nseg1,Ndata,secant
-integer		:: nmu,flatness
-character(len=200) ::outfname,varphase
+real*8          :: epsmin,epsmax,dkfrac,potshift,mass
+real*8		:: dL,Lmax,alpha,Deltamag,mu0
+real*8		:: dLJ,Lmax1,alpha1,Deltamag1,mu01
+integer         :: secant
+character(len=200) ::outfname
 
 character(len=200) :: Aphilist,ABlist,AmuSClist,Amulist,ASCmlist
 integer :: Anstepphi,AnstepB,AnstepmuSC,Anstepmu,AnstepSCm
@@ -22,9 +19,8 @@ character(len=200) :: dataname
   private :: is_sep
 
 
-namelist /parameters/ dL, dL0, dL1, dL2, dLJ, epsmin,epsmax,Lmax,bmag,btheta,alpha,Deltamag,Deltaphase,mu0,&
-		Lmax1,bmag1,btheta1,alpha1,Deltamag1,Deltaphase1,mu01,phi,potshift, pot,& !(h)
-		Lj, SCmass, mass,Nseg,Nseg1,Ndata,nmu, dkfrac,flatness,outfname,varphase,secant
+namelist /parameters/ outfname,alpha,alpha1,Deltamag,Deltamag1,Lmax,Lmax1,dkfrac,secant,&
+		epsmin,epsmax,dL,dLJ,potshift,mass
 
 namelist /newparameters/ dataname,Anstepphi,AnstepB,AnstepmuSC,Anstepmu,AnstepSCm,&
 		Aphilist,ABlist,AmuSClist,Amulist,ASCmlist
