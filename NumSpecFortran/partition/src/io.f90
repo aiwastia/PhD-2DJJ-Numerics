@@ -2,10 +2,10 @@ module io
 
 implicit none
 
-real*8          :: dL, dL0, dL1, dL2, epsmin,epsmax,dkfrac
+real*8          :: dL, dL0, dL1, dL2, dLJ, epsmin,epsmax,dkfrac
 real*8		:: Lmax,bmag,btheta,alpha,Deltamag,Deltaphase,mu0
 real*8		:: Lmax1,bmag1,btheta1,alpha1,Deltamag1,Deltaphase1,mu01
-real*8		:: Deltaphase2
+real*8		:: phi!Deltaphase2
 real*8          :: potshift, pot, Lj, SCmass, mass
 integer         :: Nseg,Nseg1,Ndata,secant
 integer		:: nmu,flatness
@@ -22,8 +22,8 @@ character(len=200) :: dataname
   private :: is_sep
 
 
-namelist /parameters/ dL, dL0, dL1, dL2, epsmin,epsmax,Lmax,bmag,btheta,alpha,Deltamag,Deltaphase,mu0,&
-		Lmax1,bmag1,btheta1,alpha1,Deltamag1,Deltaphase1,mu01,Deltaphase2,potshift, pot,&
+namelist /parameters/ dL, dL0, dL1, dL2, dLJ, epsmin,epsmax,Lmax,bmag,btheta,alpha,Deltamag,Deltaphase,mu0,&
+		Lmax1,bmag1,btheta1,alpha1,Deltamag1,Deltaphase1,mu01,phi,potshift, pot,& !(h)
 		Lj, SCmass, mass,Nseg,Nseg1,Ndata,nmu, dkfrac,flatness,outfname,varphase,secant
 
 namelist /newparameters/ dataname,Anstepphi,AnstepB,AnstepmuSC,Anstepmu,AnstepSCm,&
