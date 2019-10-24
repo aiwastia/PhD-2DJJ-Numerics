@@ -9,12 +9,12 @@ use scans
 implicit none
 
 real*8              :: Deltar,Deltai,Deltar1,Deltai1
-real*8              :: gammatot, bmagx, kx, mubuff, mubuff1, kxmax, kxmin, phi, normres, eps,&
-			            Ekx, Ekx1, Ekx2, kFmax, dkx, gap
+real*8              :: gammatot, bmagx, kx, mubuff, mubuff1, kxmax, kxmin, normres, eps,&
+			            Ekx, Ekx1, Ekx2, kFmax, dkx, gap!,phi
 real                ::tarray(2), result, tottime
 integer             :: n, i, jj, Opnbr, Opnbr1,nkxmax
 
-real*8,dimension(5)		:: vardata
+real*8,dimension(5)	:: vardata
 character(len=3) 	:: tempstr
 
 character(len=4),dimension(6) :: vartitle
@@ -71,7 +71,7 @@ do g=1,Anstepphi
 		read(22,'(a4)') Alecture
 		if (Alecture.eq.'mass') then
 			Apointer=1
-			write(22,*) 'Deltaphase2',achar(9),'=',Aloopparam(5)
+			write(22,*) 'phi',achar(9),'=',Aloopparam(5) !(h)
 			write(22,*) 'bmag',achar(9),achar(9),'=',Aloopparam(4)
 			write(22,*) 'mu0',achar(9),achar(9),'=',Aloopparam(3)
 			write(22,*) 'mu01',achar(9),achar(9),'=',Aloopparam(1)
@@ -88,18 +88,23 @@ call get_infile_parameter
 !!!!!!!!!! PARAMETERS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Deltaphase=0d0 !common shift of the phases
 Deltaphase1=0d0 ! in junction
+
 btheta=0d0
 btheta1=0d0
+
 bmag1=bmag ! same magnetic field in lead and junction
 bmag=0. !set to 0 in leads
-alpha1=alpha !same SOC in the lead and in the junction
-!alpha=0. !set to 0 in leads
+if (bmag.eq.bmag1) then
+	print*, 'same magnetic field in the SC leads and in the junction'
+else
+	print*, 'no magnetic field in the SC leads'
+endif
 
 gammatot = 0 !disorder amplitude
 varphase='scLR' !specify the system (SC on left and right)
 
 ! SC phase difference in units of 2*pi
-phi = Deltaphase2
+!phi = Deltaphase2
 
 Deltar = Deltamag * cos(Deltaphase*pi)
 Deltai = Deltamag * sin(Deltaphase*pi)
@@ -107,6 +112,7 @@ Deltar1 = Deltamag1 * cos(Deltaphase1*pi)
 Deltai1 = Deltamag1 * sin(Deltaphase1*pi)
 
 kFmax=mass*alpha1+sqrt(2d0*mass*(mu01+bmag1)+mass**2*alpha1**2) !in junction
+print*, 'kFmax= ', kFmax
 kxmax=1.1*kFmax
 kxmin=0. !1.0*kFmax-2*kFmax/(kFmax*Lmax1)**2
 dkx=kFmax/(kFmax*Lmax1)**2 / dkfrac
@@ -124,12 +130,12 @@ nkxmax=int((kxmax-kxmin)/dkx)
  endif 
 
  !junction
- if (Lmax1.gt.dL) then
-     Opnbr1=min(30,int(log(Lmax1/dL)/log(2d0))+1)
+ if (Lmax1.gt.dLJ) then
+     Opnbr1=min(30,int(log(Lmax1/dLJ)/log(2d0))+1)
      Nseg1 = 2**Opnbr1
      dL1 = Lmax1 / dble(Nseg1)
  else
-     dL1=dL
+     dL1=dLJ
      Nseg1=0
  endif
 
